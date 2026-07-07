@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useMatchRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AdminChrome } from "./admin";
 import { useStore } from "@/lib/store";
 import { useMemo } from "react";
@@ -9,15 +9,13 @@ export const Route = createFileRoute("/admin/dashboard")({
 });
 
 function DashboardLayout() {
-  const matchRoute = useMatchRoute();
-  const activeKey = matchRoute({ to: "/admin/dashboard/orders" })
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeKey = pathname.startsWith("/admin/dashboard/orders")
     ? "orders"
-    : matchRoute({ to: "/admin/dashboard/prescriptions" }) ||
-      matchRoute({ to: "/admin/dashboard/prescriptions/$id" })
+    : pathname.startsWith("/admin/dashboard/prescriptions")
     ? "prescriptions"
     : "overview";
-
-  const isIndex = !!matchRoute({ to: "/admin/dashboard", fuzzy: false });
+  const isIndex = pathname === "/admin/dashboard" || pathname === "/admin/dashboard/";
 
   return (
     <AdminChrome active={activeKey}>
