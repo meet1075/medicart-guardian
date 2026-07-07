@@ -1,0 +1,163 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { CheckoutFrame } from "@/components/CheckoutFrame";
+import { useStore } from "@/lib/store";
+import { useEffect, useState } from "react";
+import type { Address, Order, PrescriptionFile } from "@/lib/types";
+import { Banknote, CreditCard, Smartphone, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+
+const PENDING_ADDRESS = "medicart.pending-address.v1";
+const PRESCRIPTION_KEY = "medicart.pending-prescription.v1";
+
+export const Route = createFileRoute("/checkout/payment")({
+  head: () => ({
+    meta: [{ title: "Payment — MediCart" }, { name: "robots", content: "noindex" }],
+  }),
+  component: PaymentStep,
+});
+
+function PaymentStep() {
+  const { cart, cartHasRx, createOrder, clearCart } = useStore();
+  const navigate = useNavigate();
+  const [method, setMethod] = useState<Order["paymentMethod"]>("upi");
+  const [placing, setPlacing] = useState(false);
+  const [address, setAddress] = useState<Address | null>(null);
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      navigate({ to: "/cart", replace: true });
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(PENDING_ADDRESS);
+      if (!raw) {
+        navigate({ to: "/checkout/address", replace: true });
+        return;
+      }
+      setAddress(JSON.parse(raw) as Address);
+    } catch {
+      navigate({ to: "/checkout/address", replace: true });
+    }
+  }, [cart.length, navigate]);
+
+  function placeOrder() {
+    if (!address) return;
+    setPlacing(true);
+    let files: PrescriptionFile[] = [];
+    if (cartHasRx) {
+      try {
+        const raw = window.localStorage.getItem(PRESCRIPTION_KEY);
+        if (raw) files = JSON.parse(raw);
+      } catch { /* ignore */ }
+    }
+
+    // Simulate payment settle
+    setTimeout(() => {
+      const order = createOrder({ prescriptionFiles: files, address, paymentMethod: method });
+      clearCart();
+      window.localStorage.removeItem(PENDING_ADDRESS);
+      window.localStorage.removeItem(PRESCRIPTION_KEY);
+      toast.success("Order placed successfully");
+      navigate({ to: "/order/$id", params: { id: order.id } });
+    }, 700);
+  }
+
+  return (
+    <CheckoutFrame current="payment">
+      <section className="rounded-xl border border-border bg-surface p-6">
+        <h2 className="text-lg font-semibold">Payment method</h2>
+        <div className="mt-4 space-y-3">
+          <PayOption
+            selected={method === "upi"}
+            onClick={() => setMethod("upi")}
+            icon={<Smartphone size={20} />}
+            title="UPI"
+            subtitle="Pay via any UPI app (Google Pay, PhonePe, Paytm)"
+          />
+          <PayOption
+            selected={method === "card"}
+            onClick={() => setMethod("card")}
+            icon={<CreditCard size={20} />}
+            title="Credit or Debit Card"
+            subtitle="Visa, Mastercard, Rupay — securely processed"
+          />
+          <PayOption
+            selected={method === "cod"}
+            onClick={() => setMethod("cod")}
+            icon={<Banknote size={20} />}
+            title="Cash on Delivery"
+            subtitle="Pay when your order arrives"
+          />
+        </div>
+
+        {address && (
+          <div className="mt-6 rounded-lg border border-border bg-background p-4 text-sm">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Delivering to
+            </div>
+            <div className="mt-1 font-semibold">{address.fullName} · {address.type}</div>
+            <div className="text-muted-foreground">
+              {address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} — {address.pincode}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">{address.phone}</div>
+          </div>
+        )}
+
+        <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-primary-soft/40 p-4 text-xs text-foreground/80">
+          <ShieldCheck size={16} className="mt-0.5 flex-none text-primary" />
+          Payments are processed over an encrypted connection. This demo simulates a real payment gateway
+          (Razorpay/Stripe) without charging your account.
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            type="button"
+            disabled={placing}
+            onClick={placeOrder}
+            className="rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60 hover:bg-primary/90"
+          >
+            {placing ? "Placing order…" : "Place order"}
+          </button>
+        </div>
+      </section>
+    </CheckoutFrame>
+  );
+}
+
+function PayOption({
+  selected,
+  onClick,
+  icon,
+  title,
+  subtitle,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-start gap-4 rounded-lg border p-4 text-left ${
+        selected ? "border-primary bg-primary-soft/60" : "border-border bg-background hover:border-primary/40"
+      }`}
+    >
+      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${selected ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"}`}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="font-semibold text-foreground">{title}</div>
+        <div className="text-xs text-muted-foreground">{subtitle}</div>
+      </div>
+      <div
+        className={`mt-1 h-4 w-4 rounded-full border ${
+          selected ? "border-primary bg-primary" : "border-border"
+        }`}
+        aria-hidden
+      />
+    </button>
+  );
+}
