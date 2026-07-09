@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
-import { useStore } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
 import { LayoutDashboard, Package, FileText, LogOut, Cross } from "lucide-react";
 import { useEffect } from "react";
 
@@ -15,19 +15,22 @@ function AdminLayout() {
 }
 
 export function AdminChrome({ children, active }: { children: React.ReactNode; active: string }) {
-  const { adminEmail, adminLogout } = useStore();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!adminEmail) navigate({ to: "/admin", replace: true });
-  }, [adminEmail, navigate]);
+    if (!isLoading && (!user || user.role !== "ADMIN")) {
+      navigate({ to: "/login", replace: true });
+    }
+  }, [user, isLoading, navigate]);
 
-  if (!adminEmail) return null;
+  if (isLoading || !user || user.role !== "ADMIN") return null;
 
   const items = [
     { key: "overview", label: "Overview", icon: LayoutDashboard, to: "/admin/dashboard" as const },
     { key: "orders", label: "Orders", icon: Package, to: "/admin/dashboard/orders" as const },
     { key: "prescriptions", label: "Prescriptions", icon: FileText, to: "/admin/dashboard/prescriptions" as const },
+    { key: "medicines", label: "Medicines", icon: Package, to: "/admin/dashboard/medicines" as const },
   ];
 
   return (
@@ -67,12 +70,12 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
 
         <div className="border-t border-border pt-4">
           <div className="text-xs text-muted-foreground">Signed in as</div>
-          <div className="truncate text-sm font-semibold">{adminEmail}</div>
+          <div className="truncate text-sm font-semibold">{user.email}</div>
           <button
             type="button"
-            onClick={() => {
-              adminLogout();
-              navigate({ to: "/admin" });
+            onClick={async () => {
+              await logout();
+              navigate({ to: "/" });
             }}
             className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
           >
@@ -92,9 +95,9 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
             </div>
             <button
               type="button"
-              onClick={() => {
-                adminLogout();
-                navigate({ to: "/admin" });
+              onClick={async () => {
+                await logout();
+                navigate({ to: "/" });
               }}
               className="text-xs text-muted-foreground"
             >

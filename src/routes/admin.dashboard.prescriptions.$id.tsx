@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import { useStore } from "@/lib/store";
-import { getMedicine } from "@/lib/medicines";
+import { useOrders, useOrder } from "@/hooks/use-orders";
+import { useMedicines } from "@/hooks/use-medicines";
 import type { MatchStatus } from "@/lib/types";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, XCircle, AlertTriangle, FileText, Sparkles } from "lucide-react";
@@ -12,11 +14,29 @@ export const Route = createFileRoute("/admin/dashboard/prescriptions/$id")({
 
 function PrescriptionReviewPage() {
   const { id } = Route.useParams();
-  const { orders, adminEmail, toggleItemVerified, approveOrder, rejectOrder } = useStore();
+  const { storeHydrated } = useStore();
+  const { user } = useAuth();
+  const { updateOrderStatus, toggleItemVerification, isUpdating } = useOrders();
+  const { data: order, isLoading } = useOrder(id);
+  const { medicines, isLoading: isLoadingMedicines } = useMedicines();
   const navigate = useNavigate();
-  const order = orders.find((o) => o.id === id);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Wait for localStorage hydration before rendering — prevents SSR "Order not found"
+  // from clobbering the actual data once the client loads.
+  if (!storeHydrated || isLoading || isLoadingMedicines) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-5 w-32 rounded bg-border" />
+        <div className="h-8 w-64 rounded bg-border" />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="h-64 rounded-xl bg-surface border border-border" />
+          <div className="h-64 rounded-xl bg-surface border border-border" />
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -29,22 +49,34 @@ function PrescriptionReviewPage() {
     );
   }
 
-  const allReviewed =
-    order.itemVerification.length > 0 &&
-    order.itemVerification.every((v) => v.pharmacistApproved);
 
-  function approve() {
-    approveOrder(order!.id, adminEmail ?? "pharmacist");
+  const allReviewed =
+    order.itemVerifications.length > 0 &&
+    order.itemVerifications.every((v) => v.pharmacistApproved);
+
+  async function approve() {
+    await updateOrderStatus({
+      orderId: order!.id,
+      status: "processing",
+      prescriptionStatus: "verified",
+      reviewer: user?.email ?? "pharmacist",
+    });
     toast.success("Order approved and moved to processing");
     navigate({ to: "/admin/dashboard/prescriptions" });
   }
 
-  function reject() {
+  async function reject() {
     if (!rejectReason.trim()) {
       toast.error("Please provide a reason so the customer knows what to fix");
       return;
     }
-    rejectOrder(order!.id, adminEmail ?? "pharmacist", rejectReason.trim());
+    await updateOrderStatus({
+      orderId: order!.id,
+      status: "action_needed",
+      prescriptionStatus: "rejected",
+      reviewer: user?.email ?? "pharmacist",
+      rejectReason: rejectReason.trim(),
+    });
     toast.success("Order flagged as Action Needed and customer notified");
     navigate({ to: "/admin/dashboard/prescriptions" });
   }
@@ -92,7 +124,17 @@ function PrescriptionReviewPage() {
                   File {idx + 1} — {f.name}
                 </div>
                 <div className="mt-2 overflow-hidden rounded-md border border-border bg-surface-muted">
-                  {f.mimeType.startsWith("image/") ? (
+                  {f.dataUrl === "[file-too-large-for-storage]" ? (
+                    <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+                      <FileText size={28} className="text-muted-foreground/50" />
+                      <div>
+                        <div className="font-medium">File preview unavailable</div>
+                        <div className="mt-0.5 text-xs">
+                          This file was too large to cache locally. The AI extraction data below is still available for review.
+                        </div>
+                      </div>
+                    </div>
+                  ) : f.mimeType.startsWith("image/") ? (
                     <a href={f.dataUrl} target="_blank" rel="noopener noreferrer">
                       <img src={f.dataUrl} alt={f.name} className="max-h-96 w-full object-contain" />
                     </a>
@@ -107,7 +149,7 @@ function PrescriptionReviewPage() {
                     </a>
                   )}
                 </div>
-                {f.extraction && (
+                {f.aiExtractionResult && (
                   <div className="mt-3 rounded-md border border-border bg-surface-muted/50 p-3 text-xs">
                     <div className="flex items-center gap-1.5 text-primary">
                       <Sparkles size={13} />
@@ -116,17 +158,17 @@ function PrescriptionReviewPage() {
                       </span>
                     </div>
                     <div className="mt-2 grid gap-1.5">
-                      <Kv label="Doctor" value={f.extraction.doctorName ?? "—"} />
-                      <Kv label="Patient" value={f.extraction.patientName ?? "—"} />
+                      <Kv label="Doctor" value={(f.aiExtractionResult as any)?.doctorName ?? "—"} />
+                      <Kv label="Patient" value={(f.aiExtractionResult as any)?.patientName ?? "—"} />
                     </div>
                     <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Medicines detected
                     </div>
                     <ul className="mt-1 space-y-0.5">
-                      {f.extraction.medicines.length === 0 && (
+                      {(f.aiExtractionResult as any)?.medicines?.length === 0 && (
                         <li className="text-muted-foreground">None detected</li>
                       )}
-                      {f.extraction.medicines.map((m, i) => (
+                      {(f.aiExtractionResult as any)?.medicines?.map((m: any, i: number) => (
                         <li key={i}>
                           • <span className="font-semibold">{m.name}</span>
                           {m.dosage && <span className="text-muted-foreground"> — {m.dosage}</span>}
@@ -152,9 +194,9 @@ function PrescriptionReviewPage() {
             Cart items — Rx verification
           </h2>
           <div className="mt-3 space-y-3">
-            {order.itemVerification.map((v) => {
+            {order.itemVerifications.map((v) => {
               const item = order.items.find((i) => i.medicineId === v.medicineId);
-              const med = getMedicine(v.medicineId);
+              const med = medicines.find((m) => m.id === v.medicineId);
               if (!item || !med) return null;
               return (
                 <div
@@ -168,22 +210,22 @@ function PrescriptionReviewPage() {
                         {item.salt} · {item.dosageForm} · Qty {item.qty}
                       </div>
                     </div>
-                    <MatchPill status={v.aiStatus} />
+                    <MatchPill status={v.aiStatus as MatchStatus} />
                   </div>
                   <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       checked={v.pharmacistApproved}
-                      onChange={() => toggleItemVerified(order.id, v.medicineId)}
+                      onChange={() => toggleItemVerification({ id: v.id, approved: !v.pharmacistApproved })}
                       className="accent-primary"
-                      disabled={order.prescriptionStatus !== "pending"}
+                      disabled={order.prescriptionStatus !== "pending" || isUpdating}
                     />
                     <span className="font-medium">Pharmacist verified</span>
                   </label>
                 </div>
               );
             })}
-            {order.itemVerification.length === 0 && (
+            {order.itemVerifications.length === 0 && (
               <div className="text-sm text-muted-foreground">No Rx items on this order.</div>
             )}
           </div>

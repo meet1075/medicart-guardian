@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { useStore } from "@/lib/store";
-import { getMedicine } from "@/lib/medicines";
+import { useMedicines } from "@/hooks/use-medicines";
 import { MedicineVisual } from "@/components/MedicineVisual";
 import { FileText, Info, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
@@ -16,12 +16,14 @@ function CartPage() {
   const { cart, updateQty, removeFromCart, cartHasRx } = useStore();
   const navigate = useNavigate();
 
+  const { medicines, isLoading } = useMedicines();
+  
   const items = cart
     .map((c) => {
-      const m = getMedicine(c.medicineId);
+      const m = medicines.find((x) => x.id === c.medicineId);
       return m ? { m, qty: c.qty } : null;
     })
-    .filter(Boolean) as { m: NonNullable<ReturnType<typeof getMedicine>>; qty: number }[];
+    .filter(Boolean) as { m: any; qty: number }[];
 
   const rxItems = items.filter((i) => i.m.prescriptionRequired);
   const otcItems = items.filter((i) => !i.m.prescriptionRequired);
@@ -161,7 +163,7 @@ function CartRow({
   onQty,
   onRemove,
 }: {
-  m: NonNullable<ReturnType<typeof getMedicine>>;
+  m: any;
   qty: number;
   onQty: (n: number) => void;
   onRemove: () => void;

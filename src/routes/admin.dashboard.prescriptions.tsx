@@ -1,14 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useStore } from "@/lib/store";
+import { useOrders } from "@/hooks/use-orders";
 import { useMemo } from "react";
 import { StatusPill } from "./admin.dashboard";
 
 export const Route = createFileRoute("/admin/dashboard/prescriptions")({
-  component: PrescriptionsListPage,
+  component: PrescriptionsLayout,
 });
 
+function PrescriptionsLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isIndex =
+    pathname === "/admin/dashboard/prescriptions" ||
+    pathname === "/admin/dashboard/prescriptions/";
+
+  return isIndex ? <PrescriptionsListPage /> : <Outlet />;
+}
+
 function PrescriptionsListPage() {
-  const { orders } = useStore();
+  const { storeHydrated } = useStore();
+  const { orders } = useOrders();
   const rxOrders = useMemo(() => {
     return orders
       .filter((o) => o.hasRx)
@@ -16,9 +27,18 @@ function PrescriptionsListPage() {
         const pa = a.prescriptionStatus === "pending" ? 0 : 1;
         const pb = b.prescriptionStatus === "pending" ? 0 : 1;
         if (pa !== pb) return pa - pb;
-        return b.createdAt - a.createdAt;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
   }, [orders]);
+
+  if (!storeHydrated) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 w-48 rounded bg-border" />
+        <div className="mt-5 h-64 rounded-xl bg-surface border border-border" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -50,14 +70,21 @@ function PrescriptionsListPage() {
             )}
             {rxOrders.map((o) => (
               <tr key={o.id} className="hover:bg-surface-muted/60">
-                <td className="px-4 py-3 font-mono text-xs font-bold">{o.id}</td>
-                <td className="px-4 py-3 font-semibold">{o.address.fullName}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(o.createdAt).toLocaleString()}
+                <td className="px-4 py-3">{o.id}</td>
+                <td className="px-4 py-3 font-medium">
+                  {o.address?.fullName || "Guest"}
+                </td>
+                <td className="px-4 py-3">
+                  {new Date(o.createdAt).toLocaleDateString("en-IN", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </td>
                 <td className="px-4 py-3">{o.prescriptionFiles.length}</td>
                 <td className="px-4 py-3">
-                  <StatusPill status={o.status} rx={o.prescriptionStatus} />
+                  <StatusPill status={o.status} rx={o.prescriptionStatus as any} />
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">
                   {o.reviewedBy ?? "—"}

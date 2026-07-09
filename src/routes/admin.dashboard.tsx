@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AdminChrome } from "./admin";
 import { useStore } from "@/lib/store";
+import { useOrders } from "@/hooks/use-orders";
 import { useMemo } from "react";
 import { Clock, CheckCircle2, XCircle, ShoppingBag } from "lucide-react";
 
@@ -25,7 +26,7 @@ function DashboardLayout() {
 }
 
 function Overview() {
-  const { orders } = useStore();
+  const { orders } = useOrders();
 
   const stats = useMemo(() => {
     const today = new Date();
@@ -35,13 +36,13 @@ function Overview() {
     const isToday = (n: number) => n >= todayMs;
 
     return {
-      today: orders.filter((o) => isToday(o.createdAt)).length,
+      today: orders.filter((o) => isToday(new Date(o.createdAt).getTime())).length,
       pending: orders.filter((o) => o.hasRx && o.prescriptionStatus === "pending").length,
       approved: orders.filter(
-        (o) => o.prescriptionStatus === "verified" && o.reviewedAt && isToday(o.reviewedAt),
+        (o) => o.prescriptionStatus === "verified" && o.reviewedAt && isToday(new Date(o.reviewedAt).getTime()),
       ).length,
       rejected: orders.filter(
-        (o) => o.prescriptionStatus === "rejected" && o.reviewedAt && isToday(o.reviewedAt),
+        (o) => o.prescriptionStatus === "rejected" && o.reviewedAt && isToday(new Date(o.reviewedAt).getTime()),
       ).length,
     };
   }, [orders]);
@@ -95,7 +96,7 @@ function Overview() {
                     </td>
                     <td className="px-4 py-3 font-semibold">₹{o.total.toFixed(2)}</td>
                     <td className="px-4 py-3">
-                      <StatusPill status={o.status} rx={o.prescriptionStatus} />
+                      <StatusPill status={o.status} rx={o.prescriptionStatus as any} />
                     </td>
                   </tr>
                 ))}

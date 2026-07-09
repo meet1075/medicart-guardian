@@ -18,6 +18,7 @@ import type {
 } from "./types";
 import { getMedicine } from "./medicines";
 import { compareMedicine } from "./fuzzy-match";
+import { buildDemoOrder, shouldSeedDemo, DEMO_ORDER_ID } from "./demo-seed";
 
 const CART_KEY = "medicart.cart.v1";
 const ORDERS_KEY = "medicart.orders.v1";
@@ -47,9 +48,11 @@ interface StoreContext {
   approveOrder: (orderId: string, reviewer: string) => void;
   rejectOrder: (orderId: string, reviewer: string, reason: string) => void;
 
-  adminEmail: string | null;
-  adminLogin: (email: string) => void;
-  adminLogout: () => void;
+  // auth state removed in favor of Server Functions
+
+  /** True once localStorage has been read on the client. Use this to defer
+   * rendering of client-only data (orders, cart) until after hydration. */
+  storeHydrated: boolean;
 }
 
 const StoreCtx = createContext<StoreContext | null>(null);
@@ -78,15 +81,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate from localStorage (client only)
   useEffect(() => {
     setCart(loadJSON<CartItem[]>(CART_KEY, []));
-    setOrders(loadJSON<Order[]>(ORDERS_KEY, []));
+    const storedOrders = loadJSON<Order[]>(ORDERS_KEY, []);
+
+    // Inject the demo seed order on first load so the admin can immediately
+    // see a realistic pending prescription to review (dummy / demo mode).
+    if (shouldSeedDemo()) {
+      const demo = buildDemoOrder();
+      setOrders([demo, ...storedOrders]);
+    } else {
+      // Re-attach the demo order's prescription dataUrl from memory if it was
+      // stripped during a previous save (we never write large dataUrls to storage).
+      const hasDemoAlready = storedOrders.some((o) => o.id === DEMO_ORDER_ID);
+      setOrders(storedOrders);
+      if (!hasDemoAlready) {
+        // Demo was cleared by user — respect that, don't re-inject.
+      }
+    }
+
     setSavedAddresses(loadJSON<Address[]>(ADDR_KEY, []));
-    setAdminEmail(loadJSON<string | null>(ADMIN_KEY, null));
     setHydrated(true);
   }, []);
 
@@ -94,14 +111,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (hydrated) saveJSON(CART_KEY, cart);
   }, [cart, hydrated]);
   useEffect(() => {
-    if (hydrated) saveJSON(ORDERS_KEY, orders);
+    if (!hydrated) return;
+    // Strip large dataUrls from prescriptionFiles before persisting to localStorage
+    // to avoid 5 MB quota errors. The demo order's SVG is tiny so it's safe to keep;
+    // real user-uploaded base64 images can be megabytes and must be stripped.
+    const ordersForStorage = orders.map((o) => ({
+      ...o,
+      prescriptionFiles: o.prescriptionFiles.map((f) => ({
+        ...f,
+        // Keep SVG data URLs (they're tiny) but strip large image/PDF base64
+        dataUrl: f.mimeType === "image/svg+xml" || f.dataUrl.length < 50_000
+          ? f.dataUrl
+          : "[file-too-large-for-storage]",
+      })),
+    }));
+    saveJSON(ORDERS_KEY, ordersForStorage);
   }, [orders, hydrated]);
   useEffect(() => {
     if (hydrated) saveJSON(ADDR_KEY, savedAddresses);
   }, [savedAddresses, hydrated]);
-  useEffect(() => {
-    if (hydrated) saveJSON(ADMIN_KEY, adminEmail);
-  }, [adminEmail, hydrated]);
 
   // Cross-tab sync so /admin sees live order updates when public tab places one
   useEffect(() => {
@@ -297,9 +325,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const adminLogin = useCallback((email: string) => setAdminEmail(email), []);
-  const adminLogout = useCallback(() => setAdminEmail(null), []);
-
   const value: StoreContext = {
     cart,
     addToCart,
@@ -316,9 +341,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleItemVerified,
     approveOrder,
     rejectOrder,
-    adminEmail,
-    adminLogin,
-    adminLogout,
+    storeHydrated: hydrated,
   };
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

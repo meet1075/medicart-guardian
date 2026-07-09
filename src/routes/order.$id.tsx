@@ -1,9 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
-import { useStore } from "@/lib/store";
-import type { Order, OrderStatus } from "@/lib/types";
+import { useOrder, type FullOrder } from "@/hooks/use-orders";
+import type { OrderStatus } from "@/lib/types";
 import { AlertTriangle, CheckCircle2, Clock, Package, Truck, Home, ShieldCheck } from "lucide-react";
-import { useMemo } from "react";
 
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
@@ -14,8 +13,18 @@ export const Route = createFileRoute("/order/$id")({
 
 function OrderPage() {
   const { id } = Route.useParams();
-  const { orders } = useStore();
-  const order = useMemo(() => orders.find((o) => o.id === id), [orders, id]);
+  const { data: order, isLoading } = useOrder(id);
+
+  if (isLoading) {
+    return (
+      <PublicLayout>
+        <div className="container-page py-16 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Loading order details...</p>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   if (!order) {
     return (
@@ -124,7 +133,7 @@ function OrderPage() {
   );
 }
 
-function ConfirmationBanner({ order }: { order: Order }) {
+function ConfirmationBanner({ order }: { order: FullOrder }) {
   const isRxPending = order.hasRx && order.prescriptionStatus === "pending";
   const isRejected = order.prescriptionStatus === "rejected";
 
@@ -167,14 +176,14 @@ const STEP_LABEL: Record<OrderStatus, string> = {
   delivered: "Delivered",
 };
 
-function Timeline({ order }: { order: Order }) {
+function Timeline({ order }: { order: FullOrder }) {
   const rxSteps: OrderStatus[] = order.hasRx
     ? order.prescriptionStatus === "rejected"
       ? ["placed", "under_review", "action_needed"]
       : ["placed", "under_review", "verified", "processing", "shipped", "delivered"]
     : ["placed", "processing", "shipped", "delivered"];
 
-  const currentIdx = rxSteps.indexOf(order.status);
+  const currentIdx = rxSteps.indexOf(order.status as OrderStatus);
   const rank = currentIdx === -1 ? 0 : currentIdx;
 
   return (

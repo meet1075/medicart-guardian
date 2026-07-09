@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { MedicineCard } from "@/components/MedicineCard";
-import { CATEGORIES, HEALTH_CONCERNS, MEDICINES } from "@/lib/medicines";
+import { CATEGORIES, HEALTH_CONCERNS } from "@/lib/medicines";
+import { useMedicines } from "@/hooks/use-medicines";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 
@@ -28,13 +29,14 @@ export const Route = createFileRoute("/shop")({
 
 function ShopPage() {
   const { q, category, concern } = Route.useSearch();
+  const { medicines, isLoading } = useMedicines();
   const [rxFilter, setRxFilter] = useState<"all" | "rx" | "otc">("all");
   const [maxPrice, setMaxPrice] = useState<number>(3000);
   const [sortBy, setSortBy] = useState<"popular" | "price-asc" | "price-desc" | "discount">("popular");
   const [query, setQuery] = useState(q ?? "");
 
   const results = useMemo(() => {
-    let list = [...MEDICINES];
+    let list = [...medicines];
     if (category) list = list.filter((m) => m.category === category);
     if (concern) list = list.filter((m) => m.healthConcern.includes(concern as never));
     if (rxFilter !== "all") list = list.filter((m) => (rxFilter === "rx" ? m.prescriptionRequired : !m.prescriptionRequired));
@@ -140,14 +142,18 @@ function ShopPage() {
         </aside>
 
         <div>
-          {results.length === 0 ? (
+          {isLoading ? (
+            <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center">
+              <p className="text-sm text-muted-foreground animate-pulse">Loading catalog...</p>
+            </div>
+          ) : results.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center">
               <p className="text-sm text-muted-foreground">No medicines match your filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {results.map((m) => (
-                <MedicineCard key={m.id} medicine={m} />
+                <MedicineCard key={m.id} medicine={m as any} />
               ))}
             </div>
           )}

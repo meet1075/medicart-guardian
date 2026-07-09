@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { useStore } from "@/lib/store";
+import { useOrders } from "@/hooks/use-orders";
 import { useState } from "react";
 import { MapPin } from "lucide-react";
 
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/track")({
 });
 
 function TrackPage() {
-  const { orders } = useStore();
+  const { orders } = useOrders();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
 

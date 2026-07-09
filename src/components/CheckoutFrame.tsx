@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { PublicLayout } from "./PublicLayout";
 import { useStore } from "@/lib/store";
-import { getMedicine } from "@/lib/medicines";
+import { useMedicines } from "@/hooks/use-medicines";
 import { Check, FileText, MapPin, CreditCard } from "lucide-react";
 
 const STEPS = [
@@ -21,9 +21,11 @@ export function CheckoutFrame({
   const { cart, cartHasRx } = useStore();
   const activeIdx = STEPS.findIndex((s) => s.key === current);
 
+  const { medicines } = useMedicines();
+
   const items = cart
-    .map((c) => ({ m: getMedicine(c.medicineId), qty: c.qty }))
-    .filter((x) => x.m) as { m: NonNullable<ReturnType<typeof getMedicine>>; qty: number }[];
+    .map((c) => ({ m: medicines.find((x) => x.id === c.medicineId), qty: c.qty }))
+    .filter((x) => x.m) as { m: any; qty: number }[];
   const subtotal = items.reduce((s, i) => s + i.m.price * i.qty, 0);
   const delivery = subtotal > 499 ? 0 : items.length ? 39 : 0;
   const total = subtotal + delivery;

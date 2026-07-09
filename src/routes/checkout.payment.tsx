@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import type { Address, Order, PrescriptionFile } from "@/lib/types";
 import { Banknote, CreditCard, Smartphone, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useOrders } from "@/hooks/use-orders";
+import { useMedicines } from "@/hooks/use-medicines";
+import { compareMedicine } from "@/lib/fuzzy-match";
 
 const PENDING_ADDRESS = "medicart.pending-address.v1";
 const PRESCRIPTION_KEY = "medicart.pending-prescription.v1";
@@ -17,7 +20,9 @@ export const Route = createFileRoute("/checkout/payment")({
 });
 
 function PaymentStep() {
-  const { cart, cartHasRx, createOrder, clearCart } = useStore();
+  const { cart, cartHasRx, clearCart } = useStore();
+  const { createOrder: submitOrder } = useOrders();
+  const { medicines } = useMedicines();
   const navigate = useNavigate();
   const [method, setMethod] = useState<Order["paymentMethod"]>("upi");
   const [placing, setPlacing] = useState(false);
@@ -40,7 +45,7 @@ function PaymentStep() {
     }
   }, [cart.length, navigate]);
 
-  function placeOrder() {
+  async function placeOrder() {
     if (!address) return;
     setPlacing(true);
     let files: PrescriptionFile[] = [];
@@ -51,15 +56,76 @@ function PaymentStep() {
       } catch { /* ignore */ }
     }
 
-    // Simulate payment settle
-    setTimeout(() => {
-      const order = createOrder({ prescriptionFiles: files, address, paymentMethod: method });
+    const items = cart
+      .map((c) => {
+        const m = medicines.find((x) => x.id === c.medicineId);
+        if (!m) return null;
+        return {
+          medicineId: m.id,
+          name: m.name,
+          salt: m.salt,
+          qty: c.qty,
+          price: m.price,
+          dosageForm: m.dosageForm,
+          prescriptionRequired: m.prescriptionRequired,
+        };
+      })
+      .filter(Boolean) as any[];
+
+    const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const delivery = address.deliverySlot === "express" ? 79 : subtotal > 499 ? 0 : 39;
+    const hasRx = items.some((i) => i.prescriptionRequired);
+
+    const extracted = files.flatMap((f) => f.extraction?.medicines ?? []);
+    const itemVerifications = items
+      .filter((i) => i.prescriptionRequired)
+      .map((i) => {
+        const m = medicines.find((x) => x.id === i.medicineId)!;
+        const aiStatus = extracted.length
+          ? compareMedicine({ name: m.name, salt: m.salt, brand: m.brand }, extracted)
+          : "not_found";
+        return { medicineId: i.medicineId, aiStatus, pharmacistApproved: false };
+      });
+
+    const pfData = files.map(f => ({
+      name: f.name,
+      mimeType: f.mimeType,
+      dataUrl: f.dataUrl,
+      aiExtractionResult: f.extraction ?? undefined
+    }));
+
+    try {
+      const order = await submitOrder({
+        items,
+        subtotal,
+        delivery,
+        total: subtotal + delivery,
+        hasRx,
+        paymentMethod: method,
+        address: {
+          fullName: address.fullName,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          state: address.state,
+          pincode: address.pincode,
+          type: address.type,
+          deliverySlot: address.deliverySlot,
+        },
+        prescriptionFiles: pfData.length > 0 ? pfData : undefined,
+        itemVerifications: itemVerifications.length > 0 ? itemVerifications : undefined,
+      });
+
       clearCart();
       window.localStorage.removeItem(PENDING_ADDRESS);
       window.localStorage.removeItem(PRESCRIPTION_KEY);
       toast.success("Order placed successfully");
       navigate({ to: "/order/$id", params: { id: order.id } });
-    }, 700);
+    } catch (error) {
+      toast.error("Failed to place order: " + (error as Error).message);
+      setPlacing(false);
+    }
   }
 
   return (

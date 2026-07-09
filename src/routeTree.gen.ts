@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as ShopRouteImport } from './routes/shop'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as OurProductsRouteImport } from './routes/our-products'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
@@ -23,6 +28,7 @@ import { Route as CheckoutAddressRouteImport } from './routes/checkout.address'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDashboardPrescriptionsRouteImport } from './routes/admin.dashboard.prescriptions'
 import { Route as AdminDashboardOrdersRouteImport } from './routes/admin.dashboard.orders'
+import { Route as AdminDashboardMedicinesRouteImport } from './routes/admin.dashboard.medicines'
 import { Route as AdminDashboardPrescriptionsIdRouteImport } from './routes/admin.dashboard.prescriptions.$id'
 
 const TrackRoute = TrackRouteImport.update({
@@ -35,6 +41,26 @@ const ShopRoute = ShopRouteImport.update({
   path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurProductsRoute = OurProductsRouteImport.update({
+  id: '/our-products',
+  path: '/our-products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -43,6 +69,11 @@ const CartRoute = CartRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -96,6 +127,11 @@ const AdminDashboardOrdersRoute = AdminDashboardOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardMedicinesRoute = AdminDashboardMedicinesRouteImport.update({
+  id: '/medicines',
+  path: '/medicines',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 const AdminDashboardPrescriptionsIdRoute =
   AdminDashboardPrescriptionsIdRouteImport.update({
     id: '/$id',
@@ -105,8 +141,13 @@ const AdminDashboardPrescriptionsIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/our-products': typeof OurProductsRoute
+  '/register': typeof RegisterRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
@@ -116,13 +157,19 @@ export interface FileRoutesByFullPath {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/our-products': typeof OurProductsRoute
+  '/register': typeof RegisterRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
@@ -132,6 +179,7 @@ export interface FileRoutesByTo {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
@@ -139,8 +187,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/cart': typeof CartRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/our-products': typeof OurProductsRoute
+  '/register': typeof RegisterRoute
   '/shop': typeof ShopRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
@@ -150,6 +203,7 @@ export interface FileRoutesById {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
@@ -158,8 +212,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
     | '/cart'
+    | '/contact'
+    | '/login'
+    | '/our-products'
+    | '/register'
     | '/shop'
     | '/track'
     | '/admin/dashboard'
@@ -169,13 +228,19 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin/'
+    | '/admin/dashboard/medicines'
     | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/prescriptions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/cart'
+    | '/contact'
+    | '/login'
+    | '/our-products'
+    | '/register'
     | '/shop'
     | '/track'
     | '/admin/dashboard'
@@ -185,14 +250,20 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin'
+    | '/admin/dashboard/medicines'
     | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/prescriptions/$id'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
     | '/cart'
+    | '/contact'
+    | '/login'
+    | '/our-products'
+    | '/register'
     | '/shop'
     | '/track'
     | '/admin/dashboard'
@@ -202,6 +273,7 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin/'
+    | '/admin/dashboard/medicines'
     | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/prescriptions/$id'
@@ -209,8 +281,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   CartRoute: typeof CartRoute
+  ContactRoute: typeof ContactRoute
+  LoginRoute: typeof LoginRoute
+  OurProductsRoute: typeof OurProductsRoute
+  RegisterRoute: typeof RegisterRoute
   ShopRoute: typeof ShopRoute
   TrackRoute: typeof TrackRoute
   CheckoutAddressRoute: typeof CheckoutAddressRoute
@@ -236,6 +313,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-products': {
+      id: '/our-products'
+      path: '/our-products'
+      fullPath: '/our-products'
+      preLoaderRoute: typeof OurProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cart': {
       id: '/cart'
       path: '/cart'
@@ -248,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -320,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardOrdersRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/admin/dashboard/medicines': {
+      id: '/admin/dashboard/medicines'
+      path: '/medicines'
+      fullPath: '/admin/dashboard/medicines'
+      preLoaderRoute: typeof AdminDashboardMedicinesRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/admin/dashboard/prescriptions/$id': {
       id: '/admin/dashboard/prescriptions/$id'
       path: '/$id'
@@ -345,11 +464,13 @@ const AdminDashboardPrescriptionsRouteWithChildren =
   )
 
 interface AdminDashboardRouteChildren {
+  AdminDashboardMedicinesRoute: typeof AdminDashboardMedicinesRoute
   AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
   AdminDashboardPrescriptionsRoute: typeof AdminDashboardPrescriptionsRouteWithChildren
 }
 
 const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
+  AdminDashboardMedicinesRoute: AdminDashboardMedicinesRoute,
   AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
   AdminDashboardPrescriptionsRoute:
     AdminDashboardPrescriptionsRouteWithChildren,
@@ -373,8 +494,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   CartRoute: CartRoute,
+  ContactRoute: ContactRoute,
+  LoginRoute: LoginRoute,
+  OurProductsRoute: OurProductsRoute,
+  RegisterRoute: RegisterRoute,
   ShopRoute: ShopRoute,
   TrackRoute: TrackRoute,
   CheckoutAddressRoute: CheckoutAddressRoute,
@@ -386,3 +512,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -2,17 +2,18 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { MedicineVisual } from "@/components/MedicineVisual";
 import { MedicineCard } from "@/components/MedicineCard";
-import { getMedicine, MEDICINES } from "@/lib/medicines";
+import { getMedicineByIdFn } from "@/api/medicines";
+import { useMedicines } from "@/hooks/use-medicines";
 import { useStore } from "@/lib/store";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { FileText, ShieldCheck, Info } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
-  loader: ({ params }) => {
-    const medicine = getMedicine(params.id);
-    if (!medicine) throw notFound();
-    return { medicine };
+  loader: async ({ params }) => {
+    const res = await getMedicineByIdFn({ data: { id: params.id } });
+    if (res.status === "error" || !res.data) throw notFound();
+    return { medicine: res.data as any };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -33,7 +34,8 @@ function ProductPage() {
   const navigate = useNavigate();
   const off = Math.max(0, Math.round(((medicine.mrp - medicine.price) / medicine.mrp) * 100));
 
-  const substitutes = MEDICINES.filter(
+  const { medicines } = useMedicines();
+  const substitutes = medicines.filter(
     (m) => m.id !== medicine.id && m.category === medicine.category,
   ).slice(0, 4);
 

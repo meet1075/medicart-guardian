@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useStore } from "@/lib/store";
+import { useOrders } from "@/hooks/use-orders";
 import { useMemo, useState } from "react";
 import { StatusPill } from "./admin.dashboard";
 import { FileText } from "lucide-react";
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/admin/dashboard/orders")({
 type Filter = "all" | "rx" | "otc" | "pending" | "verified" | "rejected";
 
 function OrdersPage() {
-  const { orders } = useStore();
+  const { orders, updateOrderStatus, isUpdating } = useOrders();
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -124,7 +125,7 @@ function OrdersPage() {
                   {o.status.replace("_", " ")}
                 </td>
                 <td className="px-4 py-3">
-                  {o.hasRx ? <StatusPill status={o.status} rx={o.prescriptionStatus} /> : <span className="text-xs text-muted-foreground">—</span>}
+                  {o.hasRx ? <StatusPill status={o.status} rx={o.prescriptionStatus as any} /> : <span className="text-xs text-muted-foreground">—</span>}
                 </td>
               </tr>
             ))}
@@ -209,6 +210,28 @@ function OrdersPage() {
                 <FileText size={16} /> Open prescription review
               </Link>
             )}
+
+            <div className="mt-8 border-t border-border pt-6">
+              <div className="text-sm font-bold">Update Tracking Status</div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Move the order through the fulfillment pipeline.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <select
+                  value={open.status}
+                  onChange={(e) => updateOrderStatus({ orderId: open.id, status: e.target.value })}
+                  disabled={isUpdating}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+                >
+                  <option value="placed">Placed</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="action_needed" disabled>Action Needed (via Rx)</option>
+                </select>
+                {isUpdating && <div className="animate-pulse text-xs text-primary self-center">Updating...</div>}
+              </div>
+            </div>
           </div>
         </div>
       )}

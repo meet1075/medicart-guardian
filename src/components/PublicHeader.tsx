@@ -1,34 +1,52 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { ShoppingCart, User, Search, Cross, MapPin } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { ShoppingCart, Search, MapPin, Menu, X } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
+import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import logoImg from "@/assets/obat-logo.png";
+
+const NAV_LINKS = [
+  { to: "/about", label: "About" },
+  { to: "/our-products", label: "Our Products" },
+  { to: "/shop", label: "Shop" },
+  { to: "/track", label: "Track Order" },
+  { to: "/contact", label: "Contact" },
+] as const;
 
 export function PublicHeader() {
   const { cartCount } = useStore();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [q, setQ] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+      {/* ── Top bar ── */}
       <div className="container-page flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:gap-6 lg:py-4">
+        {/* Logo + mobile controls */}
         <div className="flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Cross size={20} strokeWidth={2.5} />
-            </div>
-            <div className="leading-tight">
-              <div className="text-lg font-bold text-foreground">MediCart</div>
-              <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Licensed Pharmacy
-              </div>
-            </div>
+          <Link to="/" className="flex items-center">
+            <img src={logoImg} alt="Obat Medicare" className="h-10 object-contain" />
           </Link>
 
-          <div className="flex items-center gap-4 lg:hidden">
-            <Link to="/track" aria-label="Track order" className="text-muted-foreground hover:text-foreground">
+          <div className="flex items-center gap-3 lg:hidden">
+            <Link
+              to="/track"
+              aria-label="Track order"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <MapPin size={20} />
             </Link>
-            <Link to="/cart" className="relative text-muted-foreground hover:text-foreground" aria-label="Cart">
+            <Link
+              to="/cart"
+              className="relative text-muted-foreground hover:text-foreground"
+              aria-label="Cart"
+            >
               <ShoppingCart size={22} />
               {cartCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
@@ -36,9 +54,18 @@ export function PublicHeader() {
                 </span>
               )}
             </Link>
+            <button
+              type="button"
+              aria-label="Toggle menu"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </div>
 
+        {/* Search bar */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -62,11 +89,28 @@ export function PublicHeader() {
           </button>
         </form>
 
-        <nav className="hidden items-center gap-5 text-sm font-medium text-foreground/80 lg:flex">
-          <Link to="/shop" className="hover:text-primary">Shop</Link>
-          <Link to="/track" className="hover:text-primary">Track Order</Link>
-          <Link to="/admin" className="hover:text-primary">Staff</Link>
-          <Link to="/cart" className="relative flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 hover:border-primary hover:text-primary">
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-1 lg:flex">
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.to || pathname.startsWith(link.to + "/");
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary-soft text-primary"
+                    : "text-foreground/70 hover:bg-surface-muted hover:text-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+          <Link
+            to="/cart"
+            className="relative ml-1 flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground/70 hover:border-primary hover:text-primary"
+          >
             <ShoppingCart size={16} />
             Cart
             {cartCount > 0 && (
@@ -75,15 +119,142 @@ export function PublicHeader() {
               </span>
             )}
           </Link>
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary"
-            aria-label="Account"
-          >
-            <User size={18} />
-          </button>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="ml-3 outline-none">
+                <Avatar className="h-8 w-8 cursor-pointer border border-primary/20 hover:border-primary/50">
+                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                    {user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm">
+                  <div className="font-medium">{user.name}</div>
+                  <div className="text-xs text-muted-foreground">{user.email}</div>
+                </div>
+                <DropdownMenuSeparator />
+                {user.role === "ADMIN" && (
+                  <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+                    Admin Dashboard
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => navigate({ to: "/track" })}>
+                  My Orders
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  onClick={async () => {
+                    await logout();
+                    toast.success("Logged out");
+                  }}
+                >
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="ml-3 flex items-center gap-2">
+              <Link
+                to="/login"
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-foreground/70 hover:bg-surface-muted hover:text-foreground"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:bg-foreground/90"
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
+
+      {/* ── Mobile menu ── */}
+      {mobileOpen && (
+        <div className="border-t border-border bg-surface lg:hidden">
+          <nav className="container-page flex flex-col gap-1 py-3">
+            {NAV_LINKS.map((link) => {
+              const isActive = pathname === link.to || pathname.startsWith(link.to + "/");
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary-soft text-primary"
+                      : "text-foreground/70 hover:bg-surface-muted"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+            <Link
+              to="/cart"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-foreground/70 hover:bg-surface-muted"
+            >
+              <ShoppingCart size={16} /> Cart
+              {cartCount > 0 && (
+                <span className="rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            {user?.role === "ADMIN" && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg px-4 py-3 text-sm font-medium text-foreground/70 hover:bg-surface-muted"
+              >
+                Staff / Admin
+              </Link>
+            )}
+            
+            {!user && (
+              <div className="mt-2 grid grid-cols-2 gap-2 border-t border-border pt-4">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium"
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex justify-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+            
+            {user && (
+              <div className="mt-2 border-t border-border pt-4 px-4 text-sm">
+                <div className="font-semibold">{user.name}</div>
+                <div className="text-xs text-muted-foreground">{user.email}</div>
+                <button
+                  type="button"
+                  className="mt-3 w-full rounded-md border border-destructive/20 bg-destructive/10 py-2 text-xs font-semibold text-destructive"
+                  onClick={() => {
+                    logout();
+                    setMobileOpen(false);
+                  }}
+                >
+                  Log out
+                </button>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
