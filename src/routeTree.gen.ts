@@ -26,10 +26,12 @@ import { Route as CheckoutPrescriptionRouteImport } from './routes/checkout.pres
 import { Route as CheckoutPaymentRouteImport } from './routes/checkout.payment'
 import { Route as CheckoutAddressRouteImport } from './routes/checkout.address'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminDashboardUsersRouteImport } from './routes/admin.dashboard.users'
 import { Route as AdminDashboardPrescriptionsRouteImport } from './routes/admin.dashboard.prescriptions'
-import { Route as AdminDashboardOrdersRouteImport } from './routes/admin.dashboard.orders'
 import { Route as AdminDashboardMedicinesRouteImport } from './routes/admin.dashboard.medicines'
+import { Route as AdminDashboardOrdersIndexRouteImport } from './routes/admin.dashboard.orders.index'
 import { Route as AdminDashboardPrescriptionsIdRouteImport } from './routes/admin.dashboard.prescriptions.$id'
+import { Route as AdminDashboardOrdersIdRouteImport } from './routes/admin.dashboard.orders.$id'
 
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
@@ -116,28 +118,39 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDashboardUsersRoute = AdminDashboardUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 const AdminDashboardPrescriptionsRoute =
   AdminDashboardPrescriptionsRouteImport.update({
     id: '/prescriptions',
     path: '/prescriptions',
     getParentRoute: () => AdminDashboardRoute,
   } as any)
-const AdminDashboardOrdersRoute = AdminDashboardOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AdminDashboardRoute,
-} as any)
 const AdminDashboardMedicinesRoute = AdminDashboardMedicinesRouteImport.update({
   id: '/medicines',
   path: '/medicines',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardOrdersIndexRoute =
+  AdminDashboardOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => AdminDashboardRoute,
+  } as any)
 const AdminDashboardPrescriptionsIdRoute =
   AdminDashboardPrescriptionsIdRouteImport.update({
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AdminDashboardPrescriptionsRoute,
   } as any)
+const AdminDashboardOrdersIdRoute = AdminDashboardOrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
+  getParentRoute: () => AdminDashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,9 +171,11 @@ export interface FileRoutesByFullPath {
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
-  '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
+  '/admin/dashboard/users': typeof AdminDashboardUsersRoute
+  '/admin/dashboard/orders/$id': typeof AdminDashboardOrdersIdRoute
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
+  '/admin/dashboard/orders/': typeof AdminDashboardOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,9 +195,11 @@ export interface FileRoutesByTo {
   '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
-  '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
+  '/admin/dashboard/users': typeof AdminDashboardUsersRoute
+  '/admin/dashboard/orders/$id': typeof AdminDashboardOrdersIdRoute
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
+  '/admin/dashboard/orders': typeof AdminDashboardOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,9 +221,11 @@ export interface FileRoutesById {
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
-  '/admin/dashboard/orders': typeof AdminDashboardOrdersRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
+  '/admin/dashboard/users': typeof AdminDashboardUsersRoute
+  '/admin/dashboard/orders/$id': typeof AdminDashboardOrdersIdRoute
   '/admin/dashboard/prescriptions/$id': typeof AdminDashboardPrescriptionsIdRoute
+  '/admin/dashboard/orders/': typeof AdminDashboardOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,9 +248,11 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/admin/'
     | '/admin/dashboard/medicines'
-    | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
+    | '/admin/dashboard/users'
+    | '/admin/dashboard/orders/$id'
     | '/admin/dashboard/prescriptions/$id'
+    | '/admin/dashboard/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -251,9 +272,11 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/admin'
     | '/admin/dashboard/medicines'
-    | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
+    | '/admin/dashboard/users'
+    | '/admin/dashboard/orders/$id'
     | '/admin/dashboard/prescriptions/$id'
+    | '/admin/dashboard/orders'
   id:
     | '__root__'
     | '/'
@@ -274,9 +297,11 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/admin/'
     | '/admin/dashboard/medicines'
-    | '/admin/dashboard/orders'
     | '/admin/dashboard/prescriptions'
+    | '/admin/dashboard/users'
+    | '/admin/dashboard/orders/$id'
     | '/admin/dashboard/prescriptions/$id'
+    | '/admin/dashboard/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -418,18 +443,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/dashboard/users': {
+      id: '/admin/dashboard/users'
+      path: '/users'
+      fullPath: '/admin/dashboard/users'
+      preLoaderRoute: typeof AdminDashboardUsersRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/admin/dashboard/prescriptions': {
       id: '/admin/dashboard/prescriptions'
       path: '/prescriptions'
       fullPath: '/admin/dashboard/prescriptions'
       preLoaderRoute: typeof AdminDashboardPrescriptionsRouteImport
-      parentRoute: typeof AdminDashboardRoute
-    }
-    '/admin/dashboard/orders': {
-      id: '/admin/dashboard/orders'
-      path: '/orders'
-      fullPath: '/admin/dashboard/orders'
-      preLoaderRoute: typeof AdminDashboardOrdersRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
     '/admin/dashboard/medicines': {
@@ -439,12 +464,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardMedicinesRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/admin/dashboard/orders/': {
+      id: '/admin/dashboard/orders/'
+      path: '/orders'
+      fullPath: '/admin/dashboard/orders/'
+      preLoaderRoute: typeof AdminDashboardOrdersIndexRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/admin/dashboard/prescriptions/$id': {
       id: '/admin/dashboard/prescriptions/$id'
       path: '/$id'
       fullPath: '/admin/dashboard/prescriptions/$id'
       preLoaderRoute: typeof AdminDashboardPrescriptionsIdRouteImport
       parentRoute: typeof AdminDashboardPrescriptionsRoute
+    }
+    '/admin/dashboard/orders/$id': {
+      id: '/admin/dashboard/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/admin/dashboard/orders/$id'
+      preLoaderRoute: typeof AdminDashboardOrdersIdRouteImport
+      parentRoute: typeof AdminDashboardRoute
     }
   }
 }
@@ -465,15 +504,19 @@ const AdminDashboardPrescriptionsRouteWithChildren =
 
 interface AdminDashboardRouteChildren {
   AdminDashboardMedicinesRoute: typeof AdminDashboardMedicinesRoute
-  AdminDashboardOrdersRoute: typeof AdminDashboardOrdersRoute
   AdminDashboardPrescriptionsRoute: typeof AdminDashboardPrescriptionsRouteWithChildren
+  AdminDashboardUsersRoute: typeof AdminDashboardUsersRoute
+  AdminDashboardOrdersIdRoute: typeof AdminDashboardOrdersIdRoute
+  AdminDashboardOrdersIndexRoute: typeof AdminDashboardOrdersIndexRoute
 }
 
 const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
   AdminDashboardMedicinesRoute: AdminDashboardMedicinesRoute,
-  AdminDashboardOrdersRoute: AdminDashboardOrdersRoute,
   AdminDashboardPrescriptionsRoute:
     AdminDashboardPrescriptionsRouteWithChildren,
+  AdminDashboardUsersRoute: AdminDashboardUsersRoute,
+  AdminDashboardOrdersIdRoute: AdminDashboardOrdersIdRoute,
+  AdminDashboardOrdersIndexRoute: AdminDashboardOrdersIndexRoute,
 }
 
 const AdminDashboardRouteWithChildren = AdminDashboardRoute._addFileChildren(

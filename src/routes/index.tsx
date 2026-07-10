@@ -280,12 +280,17 @@ function LandingPage() {
 
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
             {isLoading ? (
-              <div className="col-span-full py-10 text-center text-muted-foreground animate-pulse">
-                Loading medicines...
-              </div>
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-border bg-surface p-4 animate-pulse">
+                  <div className="aspect-square rounded-xl bg-surface-muted" />
+                  <div className="mt-3 h-4 w-3/4 rounded bg-surface-muted" />
+                  <div className="mt-2 h-3 w-1/2 rounded bg-surface-muted" />
+                  <div className="mt-3 h-8 w-full rounded bg-surface-muted" />
+                </div>
+              ))
             ) : (
               medicines.slice(0, 4).map((m) => (
-                <MedicineCard key={m.id} medicine={m} />
+                <MedicineCard key={m.id} medicine={m as any} />
               ))
             )}
           </div>

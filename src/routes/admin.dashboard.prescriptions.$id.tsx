@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useStore } from "@/lib/store";
@@ -42,17 +43,19 @@ function PrescriptionReviewPage() {
     return (
       <div className="rounded-xl border border-border bg-surface p-10 text-center">
         <p className="text-sm text-muted-foreground">Order not found.</p>
-        <Link to="/admin/dashboard/prescriptions" className="mt-4 inline-block text-sm font-semibold text-primary">
+        <Link
+          to="/admin/dashboard/prescriptions"
+          className="mt-4 inline-block text-sm font-semibold text-primary"
+        >
           ← Back to prescriptions
         </Link>
       </div>
     );
   }
 
-
   const allReviewed =
     order.itemVerifications.length > 0 &&
-    order.itemVerifications.every((v) => v.pharmacistApproved);
+    order.itemVerifications.every((v: any) => v.pharmacistApproved);
 
   async function approve() {
     await updateOrderStatus({
@@ -93,8 +96,8 @@ function PrescriptionReviewPage() {
         <div>
           <h1 className="text-2xl font-bold">Prescription review</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Order <span className="font-mono font-bold">{order.id}</span> · {order.address.fullName} ·{" "}
-            {new Date(order.createdAt).toLocaleString()}
+            Order <span className="font-mono font-bold">{order.id}</span> · {order.address.fullName}{" "}
+            · {new Date(order.createdAt).toLocaleString()}
           </p>
         </div>
         {order.prescriptionStatus && (
@@ -103,8 +106,8 @@ function PrescriptionReviewPage() {
               order.prescriptionStatus === "verified"
                 ? "bg-success/15 text-success"
                 : order.prescriptionStatus === "rejected"
-                ? "bg-destructive/15 text-destructive"
-                : "bg-warning/15 text-warning-foreground"
+                  ? "bg-destructive/15 text-destructive"
+                  : "bg-warning/15 text-warning-foreground"
             }`}
           >
             {order.prescriptionStatus.toUpperCase()}
@@ -118,7 +121,7 @@ function PrescriptionReviewPage() {
             Uploaded prescription ({order.prescriptionFiles.length})
           </h2>
           <div className="mt-3 space-y-4">
-            {order.prescriptionFiles.map((f, idx) => (
+            {order.prescriptionFiles.map((f: any, idx: number) => (
               <div key={f.id} className="rounded-lg border border-border bg-background p-3">
                 <div className="text-xs text-muted-foreground">
                   File {idx + 1} — {f.name}
@@ -130,13 +133,18 @@ function PrescriptionReviewPage() {
                       <div>
                         <div className="font-medium">File preview unavailable</div>
                         <div className="mt-0.5 text-xs">
-                          This file was too large to cache locally. The AI extraction data below is still available for review.
+                          This file was too large to cache locally. The AI extraction data below is
+                          still available for review.
                         </div>
                       </div>
                     </div>
                   ) : f.mimeType.startsWith("image/") ? (
                     <a href={f.dataUrl} target="_blank" rel="noopener noreferrer">
-                      <img src={f.dataUrl} alt={f.name} className="max-h-96 w-full object-contain" />
+                      <img
+                        src={f.dataUrl}
+                        alt={f.name}
+                        className="max-h-96 w-full object-contain"
+                      />
                     </a>
                   ) : (
                     <a
@@ -159,7 +167,10 @@ function PrescriptionReviewPage() {
                     </div>
                     <div className="mt-2 grid gap-1.5">
                       <Kv label="Doctor" value={(f.aiExtractionResult as any)?.doctorName ?? "—"} />
-                      <Kv label="Patient" value={(f.aiExtractionResult as any)?.patientName ?? "—"} />
+                      <Kv
+                        label="Patient"
+                        value={(f.aiExtractionResult as any)?.patientName ?? "—"}
+                      />
                     </div>
                     <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Medicines detected
@@ -177,15 +188,15 @@ function PrescriptionReviewPage() {
                     </ul>
                   </div>
                 )}
-                {f.error && (
-                  <div className="mt-2 text-xs text-destructive">{f.error}</div>
+                {(f as any).error && (
+                  <div className="mt-2 text-xs text-destructive">{(f as any).error}</div>
                 )}
               </div>
             ))}
           </div>
           <div className="mt-4 rounded-md border border-border bg-primary-soft/40 p-3 text-xs text-foreground/80">
-            AI comparison is a decision-support aid only. Final verification must be performed by the
-            reviewing pharmacist.
+            AI comparison is a decision-support aid only. Final verification must be performed by
+            the reviewing pharmacist.
           </div>
         </section>
 
@@ -194,8 +205,8 @@ function PrescriptionReviewPage() {
             Cart items — Rx verification
           </h2>
           <div className="mt-3 space-y-3">
-            {order.itemVerifications.map((v) => {
-              const item = order.items.find((i) => i.medicineId === v.medicineId);
+            {order.itemVerifications.map((v: any) => {
+              const item = order.items.find((i: any) => i.medicineId === v.medicineId);
               const med = medicines.find((m) => m.id === v.medicineId);
               if (!item || !med) return null;
               return (
@@ -216,7 +227,9 @@ function PrescriptionReviewPage() {
                     <input
                       type="checkbox"
                       checked={v.pharmacistApproved}
-                      onChange={() => toggleItemVerification({ id: v.id, approved: !v.pharmacistApproved })}
+                      onChange={() =>
+                        toggleItemVerification({ id: v.id, approved: !v.pharmacistApproved })
+                      }
                       className="accent-primary"
                       disabled={order.prescriptionStatus !== "pending" || isUpdating}
                     />

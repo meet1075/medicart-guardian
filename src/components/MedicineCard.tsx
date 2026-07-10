@@ -49,13 +49,19 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
         </div>
         <button
           type="button"
+          disabled={!medicine.inStock}
           onClick={() => {
+            if (!medicine.inStock) return;
             addToCart(medicine.id);
             toast.success(`${medicine.name} added to cart`);
           }}
-          className="rounded-md border border-primary px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+            medicine.inStock 
+              ? "border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
+              : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
+          }`}
         >
-          Add
+          {medicine.inStock ? "Add" : "Out of stock"}
         </button>
       </div>
     </div>

@@ -1,9 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
 import { useMedicines } from "@/hooks/use-medicines";
 import { MedicineVisual } from "@/components/MedicineVisual";
+import { useState } from "react";
 import { FileText, Info, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -14,7 +26,9 @@ export const Route = createFileRoute("/cart")({
 
 function CartPage() {
   const { cart, updateQty, removeFromCart, cartHasRx } = useStore();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const { medicines, isLoading } = useMedicines();
   
@@ -116,9 +130,14 @@ function CartPage() {
             </dl>
             <button
               type="button"
-              onClick={() =>
-                navigate({ to: cartHasRx ? "/checkout/prescription" : "/checkout/address" })
-              }
+              onClick={() => {
+                const target = cartHasRx ? "/checkout/prescription" : "/checkout/address";
+                if (!user) {
+                  setShowLoginPrompt(true);
+                } else {
+                  navigate({ to: target });
+                }
+              }}
               className="mt-5 w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
               Proceed
@@ -129,6 +148,26 @@ function CartPage() {
           </aside>
         </div>
       </div>
+
+      <AlertDialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign in to proceed</AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to be logged into your MediCart account to proceed to checkout.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              const target = cartHasRx ? "/checkout/prescription" : "/checkout/address";
+              navigate({ to: "/login", search: { redirect: target } });
+            }}>
+              Log in
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PublicLayout>
   );
 }

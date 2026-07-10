@@ -22,7 +22,7 @@ export function PublicHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
@@ -120,7 +120,9 @@ export function PublicHeader() {
             )}
           </Link>
 
-          {user ? (
+          {authLoading ? (
+            <div className="ml-3 h-8 w-8 rounded-full bg-surface-muted animate-pulse" />
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="ml-3 outline-none">
                 <Avatar className="h-8 w-8 cursor-pointer border border-primary/20 hover:border-primary/50">
@@ -159,13 +161,13 @@ export function PublicHeader() {
             <div className="ml-3 flex items-center gap-2">
               <Link
                 to="/login"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-foreground/70 hover:bg-surface-muted hover:text-foreground"
+                className="whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-foreground/70 hover:bg-surface-muted hover:text-foreground"
               >
                 Log in
               </Link>
               <Link
                 to="/register"
-                className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:bg-foreground/90"
+                className="whitespace-nowrap rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:bg-foreground/90"
               >
                 Sign up
               </Link>
@@ -217,7 +219,7 @@ export function PublicHeader() {
               </Link>
             )}
             
-            {!user && (
+            {!authLoading && !user && (
               <div className="mt-2 grid grid-cols-2 gap-2 border-t border-border pt-4">
                 <Link
                   to="/login"

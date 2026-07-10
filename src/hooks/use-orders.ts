@@ -8,6 +8,7 @@ export type FullOrder = Order & {
   prescriptionFiles: PrescriptionFile[];
   itemVerifications: ItemVerification[];
   address: Address;
+  user: { id: string; name: string; email: string } | null;
 };
 
 export function useOrders() {
@@ -20,8 +21,9 @@ export function useOrders() {
       if (res.status === "error") throw new Error(res.message);
       return res.data as FullOrder[];
     },
-    // Poll every 10 seconds to keep admin dashboard fresh
-    refetchInterval: 10000,
+    // Poll every 3 seconds to keep admin dashboard fresh
+    refetchInterval: 3000,
+    staleTime: 2000,
   });
 
   const createOrderMutation = useMutation({
@@ -41,9 +43,17 @@ export function useOrders() {
       if (res.status === "error") throw new Error(res.message);
       return res.data as FullOrder;
     },
-    onSuccess: (data) => {
+    onSuccess: (updatedOrder) => {
+      // Optimistic update for immediate UI feedback
+      queryClient.setQueryData(["orders"], (old: FullOrder[] | undefined) => {
+        if (!old) return old;
+        return old.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+      });
+      queryClient.setQueryData(["order", updatedOrder.id], updatedOrder);
+
+      // Background sync to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["order", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["order", updatedOrder.id] });
     },
   });
 
@@ -53,16 +63,27 @@ export function useOrders() {
       if (res.status === "error") throw new Error(res.message);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (updatedVerification) => {
+      // Optimistic deep update for item verification
+      if (updatedVerification && updatedVerification.orderId) {
+        queryClient.setQueryData(["orders"], (old: FullOrder[] | undefined) => {
+          if (!old) return old;
+          return old.map(o => o.id === updatedVerification.orderId ? {
+            ...o,
+            itemVerifications: o.itemVerifications.map((iv: any) => iv.id === updatedVerification.id ? updatedVerification : iv)
+          } : o);
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      if (data && data.orderId) {
-        queryClient.invalidateQueries({ queryKey: ["order", data.orderId] });
+      if (updatedVerification && updatedVerification.orderId) {
+        queryClient.invalidateQueries({ queryKey: ["order", updatedVerification.orderId] });
       }
     },
   });
 
   return {
-    orders: ordersQuery.data ?? [],
+    orders: (ordersQuery.data ?? []) as FullOrder[],
     isLoading: ordersQuery.isLoading,
     isError: ordersQuery.isError,
     createOrder: createOrderMutation.mutateAsync,
@@ -82,5 +103,6 @@ export function useOrder(id: string) {
       return res.data as FullOrder;
     },
     enabled: !!id,
+    staleTime: 2000,
   });
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import { useMedicines } from "@/hooks/use-medicines";
 import { useState } from "react";
@@ -10,7 +11,15 @@ export const Route = createFileRoute("/admin/dashboard/medicines")({
 });
 
 function MedicinesAdminPage() {
-  const { medicines, isLoading, deleteMedicine, createMedicine, updateMedicine, isCreating, isUpdating } = useMedicines();
+  const {
+    medicines,
+    isLoading,
+    deleteMedicine,
+    createMedicine,
+    updateMedicine,
+    isCreating,
+    isUpdating,
+  } = useMedicines();
   const [q, setQ] = useState("");
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -19,7 +28,7 @@ function MedicinesAdminPage() {
     (m) =>
       m.name.toLowerCase().includes(q.toLowerCase()) ||
       m.salt.toLowerCase().includes(q.toLowerCase()) ||
-      m.id.toLowerCase().includes(q.toLowerCase())
+      m.id.toLowerCase().includes(q.toLowerCase()),
   );
 
   async function handleDelete(id: string) {
@@ -64,7 +73,11 @@ function MedicinesAdminPage() {
   }
 
   if (isLoading) {
-    return <div className="p-10 text-center text-muted-foreground animate-pulse">Loading medicines...</div>;
+    return (
+      <div className="p-10 text-center text-muted-foreground animate-pulse">
+        Loading medicines...
+      </div>
+    );
   }
 
   return (
@@ -124,16 +137,24 @@ function MedicinesAdminPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${m.inStock ? "bg-success" : "bg-destructive"}`} />
-                      <span>{m.inStock ? m.stockQty : "Out of stock"}</span>
+                      <div
+                        className={`h-2 w-2 rounded-full ${m.inStock ? "bg-success" : "bg-destructive"}`}
+                      />
+                      <span>{m.inStock ? "In Stock" : "Out of stock"}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => handleEdit(m)} className="rounded p-1.5 text-muted-foreground hover:bg-surface-muted hover:text-foreground">
+                      <button
+                        onClick={() => handleEdit(m)}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                      >
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(m.id)} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                      <button
+                        onClick={() => handleDelete(m.id)}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -164,7 +185,17 @@ function MedicinesAdminPage() {
   );
 }
 
-function MedicineEditorModal({ medicine, onClose, onSubmit, isSaving }: { medicine: Medicine | null, onClose: () => void, onSubmit: (data: any) => void, isSaving: boolean }) {
+function MedicineEditorModal({
+  medicine,
+  onClose,
+  onSubmit,
+  isSaving,
+}: {
+  medicine: Medicine | null;
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+  isSaving: boolean;
+}) {
   const [formData, setFormData] = useState({
     name: medicine?.name || "",
     salt: medicine?.salt || "",
@@ -181,13 +212,21 @@ function MedicineEditorModal({ medicine, onClose, onSubmit, isSaving }: { medici
     sideEffects: medicine?.sideEffects || "",
     safety: medicine?.safety || "",
     accent: medicine?.accent || "emerald",
+    inStock: medicine?.inStock ?? true,
   });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : type === "number" ? parseFloat(value) || 0 : value,
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+            ? parseFloat(value) || 0
+            : value,
     }));
   }
 
@@ -209,23 +248,60 @@ function MedicineEditorModal({ medicine, onClose, onSubmit, isSaving }: { medici
           <form id="medicine-form" onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</label>
-              <input required name="name" value={formData.name} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <input
+                required
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Salt / Active Ingredients</label>
-              <input required name="salt" value={formData.salt} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Salt / Active Ingredients
+              </label>
+              <input
+                required
+                name="salt"
+                value={formData.salt}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Brand</label>
-              <input required name="brand" value={formData.brand} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Brand
+              </label>
+              <input
+                required
+                name="brand"
+                value={formData.brand}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Manufacturer</label>
-              <input required name="manufacturer" value={formData.manufacturer} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Manufacturer
+              </label>
+              <input
+                required
+                name="manufacturer"
+                value={formData.manufacturer}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Category</label>
-              <select name="category" value={formData.category} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary">
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Category
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              >
                 <option value="rx">Rx</option>
                 <option value="otc">OTC</option>
                 <option value="dermatology">Dermatology</option>
@@ -233,48 +309,151 @@ function MedicineEditorModal({ medicine, onClose, onSubmit, isSaving }: { medici
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Dosage Form</label>
-              <input required name="dosageForm" value={formData.dosageForm} onChange={handleChange} placeholder="e.g. Tablet, Syrup" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Dosage Form
+              </label>
+              <input
+                required
+                name="dosageForm"
+                value={formData.dosageForm}
+                onChange={handleChange}
+                placeholder="e.g. Tablet, Syrup"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Price (₹)</label>
-              <input required type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Price (₹)
+              </label>
+              <input
+                required
+                type="number"
+                step="0.01"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">MRP (₹)</label>
-              <input required type="number" step="0.01" name="mrp" value={formData.mrp} onChange={handleChange} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                MRP (₹)
+              </label>
+              <input
+                required
+                type="number"
+                step="0.01"
+                name="mrp"
+                value={formData.mrp}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Pack Size</label>
-              <input required name="packSize" value={formData.packSize} onChange={handleChange} placeholder="e.g. 10 Tablets" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Pack Size
+              </label>
+              <input
+                required
+                name="packSize"
+                value={formData.packSize}
+                onChange={handleChange}
+                placeholder="e.g. 10 Tablets"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div className="flex items-center gap-2 pt-6">
-              <input type="checkbox" id="rxReq" name="prescriptionRequired" checked={formData.prescriptionRequired} onChange={handleChange} className="accent-primary" />
-              <label htmlFor="rxReq" className="text-sm font-semibold">Prescription Required</label>
+              <input
+                type="checkbox"
+                id="rxReq"
+                name="prescriptionRequired"
+                checked={formData.prescriptionRequired}
+                onChange={handleChange}
+                className="accent-primary"
+              />
+              <label htmlFor="rxReq" className="text-sm font-semibold">
+                Prescription Required
+              </label>
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="inStock"
+                name="inStock"
+                checked={formData.inStock}
+                onChange={handleChange}
+                className="accent-primary"
+              />
+              <label htmlFor="inStock" className="text-sm font-semibold">
+                In Stock
+              </label>
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">Uses</label>
-              <textarea required name="uses" value={formData.uses} onChange={handleChange} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <textarea
+                required
+                name="uses"
+                value={formData.uses}
+                onChange={handleChange}
+                rows={2}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">How to use</label>
-              <textarea required name="howToUse" value={formData.howToUse} onChange={handleChange} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                How to use
+              </label>
+              <textarea
+                required
+                name="howToUse"
+                value={formData.howToUse}
+                onChange={handleChange}
+                rows={2}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Side effects</label>
-              <textarea required name="sideEffects" value={formData.sideEffects} onChange={handleChange} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Side effects
+              </label>
+              <textarea
+                required
+                name="sideEffects"
+                value={formData.sideEffects}
+                onChange={handleChange}
+                rows={2}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
             <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Safety / Warnings</label>
-              <textarea required name="safety" value={formData.safety} onChange={handleChange} rows={2} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Safety / Warnings
+              </label>
+              <textarea
+                required
+                name="safety"
+                value={formData.safety}
+                onChange={handleChange}
+                rows={2}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
           </form>
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
-          <button type="button" onClick={onClose} className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-muted">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface-muted"
+          >
             Cancel
           </button>
-          <button type="submit" form="medicine-form" disabled={isSaving} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+          <button
+            type="submit"
+            form="medicine-form"
+            disabled={isSaving}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
             {isSaving ? "Saving..." : "Save Medicine"}
           </button>
         </div>

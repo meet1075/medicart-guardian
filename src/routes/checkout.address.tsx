@@ -31,17 +31,25 @@ export const Route = createFileRoute("/checkout/address")({
 function AddressStep() {
   const { cart, savedAddresses, saveAddress } = useStore();
   const navigate = useNavigate();
-  const [values, setValues] = useState<Address & { save?: boolean }>({
-    fullName: "",
-    phone: "",
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    pincode: "",
-    type: "Home",
-    deliverySlot: "standard",
-    save: true,
+  const [values, setValues] = useState<Address & { save?: boolean }>(() => {
+    const base = {
+      fullName: "",
+      phone: "",
+      line1: "",
+      line2: "",
+      city: "",
+      state: "",
+      pincode: "",
+      type: "Home" as const,
+      deliverySlot: "standard" as const,
+      save: true,
+    };
+    if (typeof window === "undefined") return base;
+    try {
+      const raw = window.localStorage.getItem(PENDING_ADDRESS);
+      if (raw) return { ...base, ...JSON.parse(raw) };
+    } catch { /* ignore */ }
+    return base;
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -49,12 +57,7 @@ function AddressStep() {
     if (cart.length === 0) navigate({ to: "/cart", replace: true });
   }, [cart.length, navigate]);
 
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(PENDING_ADDRESS);
-      if (raw) setValues((prev) => ({ ...prev, ...JSON.parse(raw) }));
-    } catch { /* ignore */ }
-  }, []);
+
 
   function update<K extends keyof typeof values>(k: K, v: (typeof values)[K]) {
     setValues((p) => ({ ...p, [k]: v }));

@@ -33,6 +33,7 @@ export interface Medicine {
   safety: string;
   accent: string; // token color for card visual
   substitutes?: string[]; // ids
+  inStock?: boolean;
 }
 
 export interface CartItem {

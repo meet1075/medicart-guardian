@@ -19,6 +19,7 @@ export const getOrdersFn = createServerFn({ method: "GET" })
           prescriptionFiles: true,
           itemVerifications: true,
           address: true,
+          user: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: "desc" },
       });
@@ -43,6 +44,7 @@ export const getOrderByIdFn = createServerFn({ method: "GET" })
           prescriptionFiles: true,
           itemVerifications: true,
           address: true,
+          user: { select: { id: true, name: true, email: true } },
         },
       });
       if (!order) return errorResponse("Order not found", undefined, 404);
@@ -107,7 +109,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
 
       const order = await db.order.create({
         data: {
-          userId: session.id,
+          user: { connect: { id: session.id } },
           subtotal: data.subtotal,
           delivery: data.delivery,
           total: data.total,
@@ -118,7 +120,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
           address: {
             create: {
               ...data.address,
-              userId: session.id,
+              user: { connect: { id: session.id } },
             }
           },
           items: {
@@ -153,6 +155,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
           prescriptionFiles: true,
           itemVerifications: true,
           address: true,
+          user: { select: { id: true, name: true, email: true } },
         }
       });
       return successResponse("Order created successfully", order, 201);
@@ -189,6 +192,7 @@ export const updateOrderStatusFn = createServerFn({ method: "POST" })
           prescriptionFiles: true,
           itemVerifications: true,
           address: true,
+          user: { select: { id: true, name: true, email: true } },
         }
       });
       return successResponse("Order updated successfully", order);

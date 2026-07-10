@@ -71,8 +71,11 @@ function PrescriptionsListPage() {
             {rxOrders.map((o) => (
               <tr key={o.id} className="hover:bg-surface-muted/60">
                 <td className="px-4 py-3">{o.id}</td>
-                <td className="px-4 py-3 font-medium">
-                  {o.address?.fullName || "Guest"}
+                <td className="px-4 py-3">
+                  <div className="font-medium">{o.user?.name || o.address?.fullName || "Guest"}</div>
+                  {o.user?.email && (
+                    <div className="text-xs text-muted-foreground">{o.user.email}</div>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {new Date(o.createdAt).toLocaleDateString("en-IN", {

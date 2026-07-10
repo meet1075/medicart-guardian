@@ -90,23 +90,35 @@ function ProductPage() {
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
+                disabled={!medicine.inStock}
                 onClick={() => {
+                  if (!medicine.inStock) return;
                   addToCart(medicine.id);
                   toast.success(`${medicine.name} added to cart`);
                 }}
-                className="flex-1 rounded-md border border-primary px-6 py-3 text-sm font-semibold text-primary hover:bg-primary hover:text-primary-foreground"
+                className={`flex-1 rounded-md border px-6 py-3 text-sm font-semibold transition-colors ${
+                  medicine.inStock 
+                    ? "border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
+                    : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
+                }`}
               >
-                Add to cart
+                {medicine.inStock ? "Add to cart" : "Out of stock"}
               </button>
               <button
                 type="button"
+                disabled={!medicine.inStock}
                 onClick={() => {
+                  if (!medicine.inStock) return;
                   addToCart(medicine.id);
                   navigate({ to: "/cart" });
                 }}
-                className="flex-1 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                className={`flex-1 rounded-md px-6 py-3 text-sm font-semibold transition-colors ${
+                  medicine.inStock 
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                    : "bg-surface-muted text-muted-foreground opacity-50 cursor-not-allowed"
+                }`}
               >
-                Buy now
+                {medicine.inStock ? "Buy now" : "Unavailable"}
               </button>
             </div>
 
@@ -134,7 +146,7 @@ function ProductPage() {
             <h2 className="text-xl font-bold text-foreground">Substitutes & related</h2>
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {substitutes.map((s) => (
-                <MedicineCard key={s.id} medicine={s} />
+                <MedicineCard key={s.id} medicine={s as any} />
               ))}
             </div>
           </section>

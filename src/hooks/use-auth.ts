@@ -1,65 +1,76 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSessionFn, loginFn, logoutFn, registerFn } from "@/api/auth";
-import type { User } from "@prisma/client";
+import { authClient, useSession } from "@/lib/auth-client";
+import { useState } from "react";
 
 export function useAuth() {
-  const queryClient = useQueryClient();
+  const { data: sessionData, isPending: isLoading, error: isError } = useSession();
+  
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const sessionQuery = useQuery({
-    queryKey: ["auth_session"],
-    queryFn: async () => {
-      const res = await getSessionFn();
-      if (res.status === "error") throw new Error(res.message);
-      return res.data as Omit<User, "passwordHash"> | null;
-    },
-    staleTime: 5 * 60 * 1000, 
-  });
+  const login = async (data: { email: string; password: string }) => {
+    setIsLoggingIn(true);
+    try {
+      const { data: result, error } = await authClient.signIn.email({
+        email: data.email,
+        password: data.password,
+      });
+      if (error) throw new Error(error.message || "Login failed");
+      return result;
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: Parameters<typeof loginFn>[0]["data"]) => {
-      const res = await loginFn({ data });
-      if (res.status === "error") throw new Error(res.message);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth_session"] });
-    },
-  });
+  const register = async (data: { name: string; email: string; password: string }) => {
+    setIsRegistering(true);
+    try {
+      const { data: result, error } = await authClient.signUp.email({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+      if (error) throw new Error(error.message || "Registration failed");
+      return result;
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: Parameters<typeof registerFn>[0]["data"]) => {
-      const res = await registerFn({ data });
-      if (res.status === "error") throw new Error(res.message);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth_session"] });
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      const res = await logoutFn();
-      if (res.status === "error") throw new Error(res.message);
+  const logout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const { error } = await authClient.signOut();
+      if (error) throw new Error(error.message || "Logout failed");
       return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth_session"] });
-    },
-  });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const loginWithGoogle = async (callbackURL: string = "/") => {
+    const { data, error } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL,
+    });
+    if (error) throw new Error(error.message || "Google Login failed");
+    return data;
+  };
 
   return {
-    user: sessionQuery.data,
-    isLoading: sessionQuery.isLoading,
-    isError: sessionQuery.isError,
+    user: (sessionData?.user as any) ?? null,
+    isLoading,
+    isError,
     
-    login: loginMutation.mutateAsync,
-    isLoggingIn: loginMutation.isPending,
+    login,
+    isLoggingIn,
     
-    register: registerMutation.mutateAsync,
-    isRegistering: registerMutation.isPending,
+    register,
+    isRegistering,
     
-    logout: logoutMutation.mutateAsync,
-    isLoggingOut: logoutMutation.isPending,
+    logout,
+    isLoggingOut,
+
+    loginWithGoogle,
   };
 }

@@ -50,6 +50,7 @@ const MedicineSchema = z.object({
   safety: z.string(),
   accent: z.string(),
   substitutes: z.array(z.string()).default([]),
+  inStock: z.boolean().default(true),
 });
 
 export const createMedicineFn = createServerFn({ method: "POST" })

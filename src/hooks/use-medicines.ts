@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { getMedicinesFn, getMedicineByIdFn, createMedicineFn, updateMedicineFn, deleteMedicineFn } from "@/api/medicines";
 import type { Medicine } from "@prisma/client";
 
@@ -12,8 +12,9 @@ export function useMedicines() {
       if (res.status === "error") throw new Error(res.message);
       return res.data as Medicine[];
     },
-    // Cache for 5 minutes
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,    // consider fresh for 5 minutes
+    gcTime: 30 * 60 * 1000,      // keep in cache for 30 minutes
+    placeholderData: keepPreviousData, // show old data instantly while refetching
   });
 
   const createMedicineMutation = useMutation({
@@ -22,7 +23,11 @@ export function useMedicines() {
       if (res.status === "error") throw new Error(res.message);
       return res.data as Medicine;
     },
-    onSuccess: () => {
+    onSuccess: (newMedicine) => {
+      queryClient.setQueryData(["medicines"], (old: Medicine[] | undefined) => {
+        if (!old) return [newMedicine];
+        return [newMedicine, ...old];
+      });
       queryClient.invalidateQueries({ queryKey: ["medicines"] });
     },
   });
@@ -33,9 +38,17 @@ export function useMedicines() {
       if (res.status === "error") throw new Error(res.message);
       return res.data as Medicine;
     },
-    onSuccess: (data) => {
+    onSuccess: (updatedMedicine) => {
+      // Optimistic update for instant UI feedback
+      queryClient.setQueryData(["medicines"], (old: Medicine[] | undefined) => {
+        if (!old) return old;
+        return old.map(m => m.id === updatedMedicine.id ? updatedMedicine : m);
+      });
+      queryClient.setQueryData(["medicine", updatedMedicine.id], updatedMedicine);
+
+      // Background sync
       queryClient.invalidateQueries({ queryKey: ["medicines"] });
-      queryClient.invalidateQueries({ queryKey: ["medicine", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["medicine", updatedMedicine.id] });
     },
   });
 
@@ -52,7 +65,7 @@ export function useMedicines() {
 
   return {
     medicines: medicinesQuery.data ?? [],
-    isLoading: medicinesQuery.isLoading,
+    isLoading: medicinesQuery.isLoading && !medicinesQuery.data, // only true on very first load
     isError: medicinesQuery.isError,
     createMedicine: createMedicineMutation.mutateAsync,
     isCreating: createMedicineMutation.isPending,

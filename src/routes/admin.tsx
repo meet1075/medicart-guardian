@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, Package, FileText, LogOut, Cross } from "lucide-react";
+import { LayoutDashboard, Package, FileText, LogOut, Cross, Users } from "lucide-react";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/admin")({
@@ -24,17 +24,26 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
     }
   }, [user, isLoading, navigate]);
 
-  if (isLoading || !user || user.role !== "ADMIN") return null;
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-surface-muted">
+        <div className="animate-pulse text-sm text-muted-foreground">Loading dashboard…</div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "ADMIN") return null;
 
   const items = [
     { key: "overview", label: "Overview", icon: LayoutDashboard, to: "/admin/dashboard" as const },
     { key: "orders", label: "Orders", icon: Package, to: "/admin/dashboard/orders" as const },
     { key: "prescriptions", label: "Prescriptions", icon: FileText, to: "/admin/dashboard/prescriptions" as const },
     { key: "medicines", label: "Medicines", icon: Package, to: "/admin/dashboard/medicines" as const },
+    { key: "users", label: "Users", icon: Users, to: "/admin/dashboard/users" as const },
   ];
 
   return (
-    <div className="flex min-h-screen bg-surface-muted">
+    <div className="flex h-screen overflow-hidden bg-surface-muted">
       <aside className="hidden w-64 flex-col border-r border-border bg-surface p-5 md:flex">
         <Link to="/admin/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -84,7 +93,7 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
         </div>
       </aside>
 
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="border-b border-border bg-surface px-6 py-3 md:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -120,7 +129,7 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
             ))}
           </nav>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6 relative">{children}</div>
       </div>
     </div>
   );

@@ -78,34 +78,26 @@ function saveJSON(k: string, v: unknown) {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => loadJSON<CartItem[]>(CART_KEY, []));
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>(() =>
+    loadJSON<Address[]>(ADDR_KEY, [])
+  );
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage (client only)
-  useEffect(() => {
-    setCart(loadJSON<CartItem[]>(CART_KEY, []));
+  const [orders, setOrders] = useState<Order[]>(() => {
     const storedOrders = loadJSON<Order[]>(ORDERS_KEY, []);
-
-    // Inject the demo seed order on first load so the admin can immediately
-    // see a realistic pending prescription to review (dummy / demo mode).
     if (shouldSeedDemo()) {
-      const demo = buildDemoOrder();
-      setOrders([demo, ...storedOrders]);
-    } else {
-      // Re-attach the demo order's prescription dataUrl from memory if it was
-      // stripped during a previous save (we never write large dataUrls to storage).
-      const hasDemoAlready = storedOrders.some((o) => o.id === DEMO_ORDER_ID);
-      setOrders(storedOrders);
-      if (!hasDemoAlready) {
-        // Demo was cleared by user — respect that, don't re-inject.
-      }
+      return [buildDemoOrder(), ...storedOrders];
     }
+    return storedOrders;
+  });
 
-    setSavedAddresses(loadJSON<Address[]>(ADDR_KEY, []));
+  // Mark hydrated on first client render
+  useEffect(() => {
     setHydrated(true);
   }, []);
+
+  // Legacy hydration effect removed — state is now seeded synchronously via lazy init above
 
   useEffect(() => {
     if (hydrated) saveJSON(CART_KEY, cart);

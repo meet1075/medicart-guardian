@@ -143,8 +143,15 @@ function ShopPage() {
 
         <div>
           {isLoading ? (
-            <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center">
-              <p className="text-sm text-muted-foreground animate-pulse">Loading catalog...</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-border bg-surface p-4 animate-pulse">
+                  <div className="aspect-square rounded-xl bg-surface-muted" />
+                  <div className="mt-3 h-4 w-3/4 rounded bg-surface-muted" />
+                  <div className="mt-2 h-3 w-1/2 rounded bg-surface-muted" />
+                  <div className="mt-3 h-8 w-full rounded bg-surface-muted" />
+                </div>
+              ))}
             </div>
           ) : results.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center">

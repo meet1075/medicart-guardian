@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,16 +9,21 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
   name         String
-  role         String    @default("USER") // USER | ADMIN
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         String   @default("USER") // USER | ADMIN
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  orders       Order[]
-  addresses    Address[]
+  orders        Order[]
+  addresses     Address[]
+  emailVerified Boolean   @default(false)
+  image         String?
+  sessions      Session[]
+  accounts      Account[]
+
 }
 
 model Medicine {
@@ -41,7 +47,7 @@ model Medicine {
   substitutes          String[]
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
-  
+  inStock              Boolean     @default(true)
   orderItems           OrderItem[]
 }
 
@@ -58,77 +64,115 @@ model Address {
   deliverySlot String   @default("standard")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
   userId       String?
   user         User?    @relation(fields: [userId], references: [id])
-  
   orders       Order[]
 }
 
 model Order {
-  id                 String   @id @default(cuid()) // E.g., MCXXX
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id        String   @id @default(cuid()) // E.g., MCXXX
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  subtotal           Float
-  delivery           Float
-  total              Float
+  subtotal Float
+  delivery Float
+  total    Float
 
-  hasRx              Boolean  @default(false)
-  
+  hasRx              Boolean   @default(false)
   paymentMethod      String
-  status             String   @default("placed") 
-  prescriptionStatus String?  
-  
+  status             String    @default("placed")
+  prescriptionStatus String?
   reviewedBy         String?
   reviewedAt         DateTime?
   rejectReason       String?
 
-  userId             String?
-  user               User?    @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  addressId          String
-  address            Address  @relation(fields: [addressId], references: [id])
+  addressId String
+  address   Address @relation(fields: [addressId], references: [id])
 
-  items              OrderItem[]
-  prescriptionFiles  PrescriptionFile[]
-  itemVerifications  ItemVerification[]
+  items             OrderItem[]
+  prescriptionFiles PrescriptionFile[]
+  itemVerifications ItemVerification[]
 }
 
 model OrderItem {
-  id                   String   @id @default(cuid())
+  id                   String  @id @default(cuid())
   orderId              String
   medicineId           String
-  
-  name                 String   // snapshot
-  salt                 String?  // snapshot
-  dosageForm           String?  // snapshot
+  name                 String // snapshot
+  salt                 String? // snapshot
+  dosageForm           String? // snapshot
   qty                  Int
-  price                Float    // snapshot
-  prescriptionRequired Boolean  @default(false)
+  price                Float // snapshot
+  prescriptionRequired Boolean @default(false)
 
-  order                Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  medicine             Medicine @relation(fields: [medicineId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  medicine Medicine @relation(fields: [medicineId], references: [id])
 }
 
 model PrescriptionFile {
-  id                 String   @id @default(cuid())
+  id                 String @id @default(cuid())
   orderId            String
   name               String
   mimeType           String
-  dataUrl            String   // the base64 or url
-  aiExtractionResult Json?    // parsed extraction
-  
-  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dataUrl            String // the base64 or url
+  aiExtractionResult Json? // parsed extraction
+  order              Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model ItemVerification {
-  id                 String   @id @default(cuid())
+  id                 String  @id @default(cuid())
   orderId            String
   medicineId         String
-  
-  aiStatus           String   // matched, possible, not_found
-  pharmacistApproved Boolean  @default(false)
+  aiStatus           String // matched, possible, not_found
+  pharmacistApproved Boolean @default(false)
 
-  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
 }
