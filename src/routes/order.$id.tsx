@@ -224,6 +224,27 @@ function Timeline({ order }: { order: FullOrder }) {
           );
         })}
       </ol>
+
+      {/* Dynamic Shiprocket Tracking Info */}
+      {(order as any).isShipmentCreated && (order as any).shipmentStatus && (
+        <div className="mt-6 border-t border-border pt-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">Live Tracking</h3>
+          <div className="rounded-lg bg-primary/5 p-4 border border-primary/10">
+            <div className="font-semibold text-sm">Status: {(order as any).shipmentStatus}</div>
+            {(order as any).awbCode && (
+              <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                <div>Courier: <span className="font-medium text-foreground">{(order as any).courierName}</span></div>
+                <div>AWB: <span className="font-medium text-foreground">{(order as any).awbCode}</span></div>
+              </div>
+            )}
+            {(order as any).pickupStatus && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                Pickup: <span className="font-medium text-foreground">{(order as any).pickupStatus}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

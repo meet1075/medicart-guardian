@@ -12,6 +12,20 @@ import { compareMedicine } from "@/lib/fuzzy-match";
 const PENDING_ADDRESS = "medicart.pending-address.v1";
 const PRESCRIPTION_KEY = "medicart.pending-prescription.v1";
 
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export const Route = createFileRoute("/checkout/payment")({
   head: () => ({
     meta: [{ title: "Payment — MediCart" }, { name: "robots", content: "noindex" }],
@@ -21,10 +35,10 @@ export const Route = createFileRoute("/checkout/payment")({
 
 function PaymentStep() {
   const { cart, cartHasRx, clearCart } = useStore();
-  const { createOrder: submitOrder } = useOrders();
+  const { createOrder: submitOrder, verifyPayment } = useOrders();
   const { medicines } = useMedicines();
   const navigate = useNavigate();
-  const [method, setMethod] = useState<Order["paymentMethod"]>("upi");
+  const [method, setMethod] = useState<Order["paymentMethod"]>("online");
   const [placing, setPlacing] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
 
@@ -117,15 +131,64 @@ function PaymentStep() {
         itemVerifications: itemVerifications.length > 0 ? itemVerifications : undefined,
       });
 
-      clearCart();
-      window.localStorage.removeItem(PENDING_ADDRESS);
-      window.localStorage.removeItem(PRESCRIPTION_KEY);
-      toast.success("Order placed successfully");
-      navigate({ to: "/order/$id", params: { id: order.id } });
+      if (order.razorpayOrderId) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          toast.error("Razorpay SDK failed to load. Are you online?");
+          setPlacing(false);
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TBlc9zvMpPDJMh", // Use env var in prod
+          amount: Math.round(order.total * 100).toString(),
+          currency: "INR",
+          name: "MediCart",
+          description: "Pharmacy Order",
+          order_id: order.razorpayOrderId,
+          handler: async function (response: any) {
+            try {
+              await verifyPayment({
+                orderId: order.id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+              completeOrder(order.id);
+            } catch (err: any) {
+              toast.error(err.message || "Payment verification failed");
+              setPlacing(false);
+            }
+          },
+          prefill: {
+            name: address.fullName,
+            contact: address.phone,
+          },
+          theme: { color: "#2563eb" },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on("payment.failed", function (response: any) {
+          toast.error(response.error.description || "Payment failed");
+          setPlacing(false);
+        });
+        rzp.open();
+      } else {
+        // COD or pure free order
+        completeOrder(order.id);
+      }
     } catch (error) {
       toast.error("Failed to place order: " + (error as Error).message);
       setPlacing(false);
     }
+  }
+
+  function completeOrder(orderId: string) {
+    clearCart();
+    window.localStorage.removeItem(PENDING_ADDRESS);
+    window.localStorage.removeItem(PRESCRIPTION_KEY);
+    toast.success("Order placed successfully");
+    navigate({ to: "/order/$id", params: { id: orderId } });
   }
 
   return (
@@ -134,18 +197,11 @@ function PaymentStep() {
         <h2 className="text-lg font-semibold">Payment method</h2>
         <div className="mt-4 space-y-3">
           <PayOption
-            selected={method === "upi"}
-            onClick={() => setMethod("upi")}
-            icon={<Smartphone size={20} />}
-            title="UPI"
-            subtitle="Pay via any UPI app (Google Pay, PhonePe, Paytm)"
-          />
-          <PayOption
-            selected={method === "card"}
-            onClick={() => setMethod("card")}
-            icon={<CreditCard size={20} />}
-            title="Credit or Debit Card"
-            subtitle="Visa, Mastercard, Rupay — securely processed"
+            selected={method === "online"}
+            onClick={() => setMethod("online")}
+            icon={<ShieldCheck size={20} />}
+            title="Pay Online Securely"
+            subtitle="UPI, Cards, Netbanking via Razorpay"
           />
           <PayOption
             selected={method === "cod"}

@@ -16,17 +16,20 @@ import {
   Mail,
 } from "lucide-react";
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About Us — Obat Medicare | MediCart" },
-      {
-        name: "description",
-        content:
-          "Learn about Obat Medicare Pvt Ltd — a third-generation, super-specialty pharmaceutical company founded in 2016 with a presence across dermatology, cardiac care, and more.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = getSeoMeta({
+      title: "About Us — Obat Medicare | MediCart",
+      description: "Learn about Obat Medicare Pvt Ltd — a third-generation, super-specialty pharmaceutical company founded in 2016 with a presence across dermatology, cardiac care, and more.",
+      path: "/about",
+    });
+    return {
+      meta: seo.meta,
+      links: seo.links,
+    };
+  },
   component: AboutPage,
 });
 
@@ -73,6 +76,26 @@ const DEPARTMENTS = [
 function AboutPage() {
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: "Obat Medicare Pvt Ltd",
+            image: "https://obatmedicare.com/favicon.ico",
+            description: "A third-generation, super-specialty pharmaceutical company.",
+            url: "https://obatmedicare.com/about",
+            telephone: "+91-9650506996",
+            email: "obatmedicare@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "MUMBAI & PATNA",
+              addressCountry: "IN"
+            }
+          }),
+        }}
+      />
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-border">
         {/* layered gradient background */}

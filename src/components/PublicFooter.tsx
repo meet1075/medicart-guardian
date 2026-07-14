@@ -36,7 +36,7 @@ export function PublicFooter() {
         {/* Brand */}
         <div className="lg:col-span-1">
           <div className="flex items-center">
-            <img src={logoImg} alt="Obat Medicare" className="h-12 object-contain" />
+            <img src={logoImg} alt="Obat Medicare" width={192} height={48} loading="lazy" className="h-12 w-auto object-contain" />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
             Obat Medicare Pvt Ltd is a fast-growing Indian pharmaceutical

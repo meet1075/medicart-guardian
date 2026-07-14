@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { successResponse, errorResponse, type ApiResponse } from "@/lib/api";
 import { getUserSession } from "@/api/auth.server";
 import { z } from "zod";
+import Razorpay from "razorpay";
+import crypto from "crypto";
+import { tryCreateShiprocketShipment } from "./shiprocket.api";
 
 export const getOrdersFn = createServerFn({ method: "GET" })
   .handler(async (): Promise<ApiResponse> => {
@@ -107,6 +110,28 @@ export const createOrderFn = createServerFn({ method: "POST" })
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in to place an order", 401);
 
+      let rzpOrderId: string | undefined = undefined;
+      let initialStatus = data.hasRx ? "under_review" : "processing";
+      const isOnline = data.paymentMethod !== "cod";
+
+      if (isOnline) {
+        initialStatus = "payment_pending";
+        try {
+          const rzp = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID!,
+            key_secret: process.env.RAZORPAY_KEY_SECRET!,
+          });
+          const rzpOrder = await rzp.orders.create({
+            amount: Math.round(data.total * 100),
+            currency: "INR",
+          });
+          rzpOrderId = rzpOrder.id;
+        } catch (e) {
+          console.error("Razorpay order creation failed", e);
+          return errorResponse("Payment initiation failed", "Could not contact payment gateway", 500);
+        }
+      }
+
       const order = await db.order.create({
         data: {
           user: { connect: { id: session.id } },
@@ -115,8 +140,9 @@ export const createOrderFn = createServerFn({ method: "POST" })
           total: data.total,
           hasRx: data.hasRx,
           paymentMethod: data.paymentMethod,
-          status: data.hasRx ? "under_review" : "processing",
+          status: initialStatus,
           prescriptionStatus: data.hasRx ? "pending" : null,
+          razorpayOrderId: rzpOrderId,
           address: {
             create: {
               ...data.address,
@@ -158,6 +184,11 @@ export const createOrderFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
+
+      if (initialStatus === "processing") {
+        tryCreateShiprocketShipment(order.id).catch(console.error);
+      }
+
       return successResponse("Order created successfully", order, 201);
     } catch (error) {
       console.error(error);
@@ -195,6 +226,11 @@ export const updateOrderStatusFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
+
+      if (data.status === "processing") {
+        tryCreateShiprocketShipment(order.id).catch(console.error);
+      }
+
       return successResponse("Order updated successfully", order);
     } catch (error) {
       console.error(error);
@@ -217,5 +253,61 @@ export const toggleItemVerificationFn = createServerFn({ method: "POST" })
     } catch (error) {
       console.error(error);
       return errorResponse("Failed to toggle item verification", (error as Error).message);
+    }
+  });
+
+export const verifyPaymentFn = createServerFn({ method: "POST" })
+  .validator(z.object({
+    orderId: z.string(),
+    razorpayPaymentId: z.string(),
+    razorpayOrderId: z.string(),
+    razorpaySignature: z.string(),
+  }))
+  .handler(async ({ data }): Promise<ApiResponse> => {
+    try {
+      const session = await getUserSession();
+      if (!session) return errorResponse("Unauthorized", "Please log in", 401);
+
+      const secret = process.env.RAZORPAY_KEY_SECRET!;
+      const hmac = crypto.createHmac("sha256", secret);
+      hmac.update(`${data.razorpayOrderId}|${data.razorpayPaymentId}`);
+      const generatedSignature = hmac.digest("hex");
+
+      if (generatedSignature !== data.razorpaySignature) {
+        return errorResponse("Payment verification failed", "Invalid signature", 400);
+      }
+
+      const order = await db.order.update({
+        where: { id: data.orderId },
+        data: {
+          razorpayPaymentId: data.razorpayPaymentId,
+          razorpaySignature: data.razorpaySignature,
+          status: "processing", // Or under_review if we want to add that check here
+        },
+        include: {
+          items: true,
+          prescriptionFiles: true,
+          itemVerifications: true,
+          address: true,
+          user: { select: { id: true, name: true, email: true } },
+        }
+      });
+
+      // Maintain prescription state if needed
+      if (order.hasRx && order.prescriptionStatus === "pending") {
+        await db.order.update({
+          where: { id: data.orderId },
+          data: { status: "under_review" }
+        });
+      }
+
+      if (!order.hasRx || order.prescriptionStatus === "verified") {
+        tryCreateShiprocketShipment(order.id).catch(console.error);
+      }
+
+      return successResponse("Payment verified successfully", order);
+    } catch (error) {
+      console.error(error);
+      return errorResponse("Payment verification error", (error as Error).message);
     }
   });

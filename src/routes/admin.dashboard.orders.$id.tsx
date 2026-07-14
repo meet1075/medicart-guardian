@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useOrders } from "@/hooks/use-orders";
+import { useShiprocket } from "@/hooks/use-shiprocket";
 import {
   ArrowLeft,
   FileText,
@@ -297,6 +298,8 @@ function OrderDetailsPage() {
             </div>
           </div>
 
+          <ShipmentManagementCard order={order} />
+
           {order.hasRx && (
             <div className="rounded-xl border border-warning/30 bg-warning/5 p-6">
               <h2 className="text-sm font-bold uppercase tracking-wider text-warning-foreground mb-4">
@@ -438,5 +441,104 @@ function MatchPill({ status }: { status: MatchStatus }) {
     <span className="whitespace-nowrap rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
       Not found
     </span>
+  );
+}
+
+function ShipmentManagementCard({ order }: { order: any }) {
+  const { retryShipmentCreation, generateAwb, schedulePickup, cancelShipment } = useShiprocket();
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+        Shiprocket Management
+      </h2>
+
+      {order.isShipmentCreated ? (
+        <div className="space-y-4 text-sm">
+          <div className="grid grid-cols-[95px_1fr] gap-y-3 gap-x-2">
+            <div className="text-muted-foreground">Order ID:</div>
+            <div className="font-medium font-mono text-[13px] break-all">{order.shiprocketOrderId}</div>
+            
+            <div className="text-muted-foreground">Shipment ID:</div>
+            <div className="font-medium font-mono text-[13px] break-all">{order.shipmentId}</div>
+
+            <div className="text-muted-foreground">Status:</div>
+            <div className="font-medium text-primary">{order.shipmentStatus}</div>
+
+            {order.awbCode && (
+              <>
+                <div className="text-muted-foreground">AWB:</div>
+                <div className="font-bold break-all">{order.awbCode}</div>
+                <div className="text-muted-foreground">Courier:</div>
+                <div className="font-medium">{order.courierName}</div>
+              </>
+            )}
+            
+            {order.pickupStatus && (
+              <>
+                <div className="text-muted-foreground">Pickup:</div>
+                <div className="font-medium">{order.pickupStatus}</div>
+              </>
+            )}
+          </div>
+
+          <div className="pt-3 border-t flex flex-col gap-2">
+            {!order.awbCode && (
+              <button
+                onClick={() => generateAwb.mutate({ orderId: order.id, shipmentId: order.shipmentId })}
+                disabled={generateAwb.isPending}
+                className="w-full rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {generateAwb.isPending ? "Generating..." : "Generate AWB"}
+              </button>
+            )}
+            
+            {order.awbCode && !order.pickupStatus && (
+              <button
+                onClick={() => schedulePickup.mutate({ orderId: order.id, shipmentId: order.shipmentId })}
+                disabled={schedulePickup.isPending}
+                className="w-full rounded-md border border-primary text-primary px-3 py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                {schedulePickup.isPending ? "Scheduling..." : "Schedule Pickup"}
+              </button>
+            )}
+
+            {order.shipmentStatus !== "Cancelled" && order.awbCode && (
+              <button
+                onClick={() => cancelShipment.mutate({ orderId: order.id, awbCode: order.awbCode })}
+                disabled={cancelShipment.isPending}
+                className="w-full rounded-md bg-destructive/10 text-destructive px-3 py-2 text-sm font-semibold mt-2 disabled:opacity-50"
+              >
+                {cancelShipment.isPending ? "Cancelling..." : "Cancel Shipment"}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-sm">
+          <div className="text-muted-foreground mb-3">
+            Shipment not yet created in Shiprocket.
+          </div>
+          {order.shipmentError && (
+            <div className="mb-4 rounded-md bg-destructive/10 p-3 text-destructive text-xs">
+              <strong>Error:</strong> {order.shipmentError}
+            </div>
+          )}
+          {order.status === "processing" ? (
+            <button
+              onClick={() => retryShipmentCreation.mutate(order.id)}
+              disabled={retryShipmentCreation.isPending}
+              className="w-full rounded-md border border-primary px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5 disabled:opacity-50"
+            >
+              {retryShipmentCreation.isPending ? "Retrying..." : "Retry Creation"}
+            </button>
+          ) : (
+            <div className="text-xs italic text-muted-foreground">
+              Order must be in 'processing' status to create shipment.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

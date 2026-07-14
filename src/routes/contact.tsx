@@ -13,17 +13,20 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact Us — Obat Medicare | MediCart" },
-      {
-        name: "description",
-        content:
-          "Get in touch with Obat Medicare. Reach us at our Mumbai or Patna offices, call +91-9650506996, or email obatmedicare@gmail.com.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = getSeoMeta({
+      title: "Contact Us — Obat Medicare | MediCart",
+      description: "Get in touch with Obat Medicare. Reach us at our Mumbai or Patna offices, call +91-9650506996, or email obatmedicare@gmail.com.",
+      path: "/contact",
+    });
+    return {
+      meta: seo.meta,
+      links: seo.links,
+    };
+  },
   component: ContactPage,
 });
 
@@ -123,6 +126,27 @@ function ContactPage() {
 
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: "Obat Medicare Pvt Ltd",
+            image: "https://obatmedicare.com/favicon.ico",
+            description: "Reach us at our Mumbai or Patna offices.",
+            url: "https://obatmedicare.com/contact",
+            telephone: "+91-9650506996",
+            email: "obatmedicare@gmail.com",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "MUMBAI & PATNA",
+              addressCountry: "IN"
+            },
+            openingHours: "Mo-Sa 09:00-18:00"
+          }),
+        }}
+      />
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-primary/50" />

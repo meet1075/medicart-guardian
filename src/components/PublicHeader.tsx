@@ -31,7 +31,7 @@ export function PublicHeader() {
         {/* Logo + mobile controls */}
         <div className="flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center">
-            <img src={logoImg} alt="Obat Medicare" className="h-10 object-contain" />
+            <img src={logoImg} alt="Obat Medicare" width={160} height={40} className="h-10 w-auto object-contain" />
           </Link>
 
           <div className="flex items-center gap-3 lg:hidden">

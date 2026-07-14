@@ -9,22 +9,29 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { FileText, ShieldCheck, Info } from "lucide-react";
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/product/$id")({
   loader: async ({ params }) => {
     const res = await getMedicineByIdFn({ data: { id: params.id } });
     if (res.status === "error" || !res.data) throw notFound();
     return { medicine: res.data as any };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.medicine.name} — ${loaderData.medicine.salt} | MediCart` },
-          { name: "description", content: loaderData.medicine.uses.slice(0, 155) },
-          { property: "og:title", content: `${loaderData.medicine.name} — MediCart` },
-          { property: "og:description", content: loaderData.medicine.uses.slice(0, 155) },
-        ]
-      : [{ title: "Medicine — MediCart" }],
-  }),
+  head: ({ loaderData }) => {
+    if (!loaderData?.medicine) return { meta: [{ title: "Medicine — MediCart" }] };
+    
+    const seo = getSeoMeta({
+      title: `${loaderData.medicine.name} — ${loaderData.medicine.salt} | MediCart`,
+      description: loaderData.medicine.uses.slice(0, 155),
+      path: `/product/${loaderData.medicine.id}`,
+      type: "product",
+    });
+
+    return {
+      meta: seo.meta,
+      links: seo.links,
+    };
+  },
   component: ProductPage,
 });
 
@@ -41,6 +48,26 @@ function ProductPage() {
 
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            name: medicine.name,
+            description: medicine.uses,
+            sku: medicine.id,
+            offers: {
+              "@type": "Offer",
+              url: `https://obatmedicare.com/product/${medicine.id}`,
+              priceCurrency: "INR",
+              price: medicine.price,
+              availability: medicine.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              itemCondition: "https://schema.org/NewCondition"
+            }
+          }),
+        }}
+      />
       <div className="container-page py-8">
         <div className="text-xs text-muted-foreground">
           <Link to="/shop" className="hover:text-primary">Shop</Link>{" "}

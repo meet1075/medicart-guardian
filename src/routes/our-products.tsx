@@ -13,17 +13,20 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/our-products")({
-  head: () => ({
-    meta: [
-      { title: "Our Products — Obat Medicare | MediCart" },
-      {
-        name: "description",
-        content:
-          "Explore the Obat Medicare pharmaceutical product range — dermatology, general medicine, cardiac-diabetic, gastroenterology, and orthopaedics formulations.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = getSeoMeta({
+      title: "Our Products — Obat Medicare | MediCart",
+      description: "Explore the Obat Medicare pharmaceutical product range — dermatology, general medicine, cardiac-diabetic, gastroenterology, and orthopaedics formulations.",
+      path: "/our-products",
+    });
+    return {
+      meta: seo.meta,
+      links: seo.links,
+    };
+  },
   component: OurProductsPage,
 });
 

@@ -20,7 +20,23 @@ import {
 } from "lucide-react";
 import heroImg from "@/assets/hero-pharmacy.jpg";
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/")({
+  head: () => {
+    const seo = getSeoMeta({
+      title: "MediCart — Genuine Medicines, Verified & Delivered",
+      description: "MediCart is a licensed online pharmacy delivering genuine, pharmacist-verified medicines. Order prescription and OTC medicines, upload your Rx, and track delivery.",
+      path: "/",
+    });
+    return {
+      meta: seo.meta,
+      links: [
+        ...seo.links,
+        { rel: "preload", as: "image", href: heroImg },
+      ],
+    };
+  },
   component: LandingPage,
 });
 
@@ -29,6 +45,19 @@ function LandingPage() {
   
   return (
     <PublicLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Obat Medicare Pvt Ltd",
+            url: "https://obatmedicare.com",
+            logo: "https://obatmedicare.com/favicon.ico",
+            description: "A third-generation, super-specialty pharmaceutical company.",
+          }),
+        }}
+      />
       {/* ── 1. Premium Hero Section ── */}
       <section className="relative overflow-hidden bg-surface">
         {/* Abstract Background Elements */}
@@ -83,6 +112,8 @@ function LandingPage() {
               <img
                 src={heroImg}
                 alt="Pharmaceutical formulations and quality control"
+                width={800}
+                height={600}
                 className="aspect-[4/3] w-full rounded-2xl object-cover"
               />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/20 via-transparent to-transparent opacity-60" />

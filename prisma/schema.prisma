@@ -86,6 +86,21 @@ model Order {
   reviewedAt         DateTime?
   rejectReason       String?
 
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+
+  shiprocketOrderId  String?
+  shipmentId         String?
+  awbCode            String?
+  courierName        String?
+  trackingUrl        String?
+  shipmentStatus     String?
+  pickupStatus       String?
+  isShipmentCreated  Boolean   @default(false)
+  shipmentError      String?
+  lastShipmentSync   DateTime?
+
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
 

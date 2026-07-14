@@ -12,18 +12,21 @@ const searchSchema = z.object({
   concern: z.string().optional(),
 });
 
+import { getSeoMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/shop")({
   validateSearch: (s) => searchSchema.parse(s),
-  head: () => ({
-    meta: [
-      { title: "Shop medicines — MediCart" },
-      {
-        name: "description",
-        content:
-          "Browse prescription and OTC medicines, vitamins, skincare, baby care, and health devices — verified by our pharmacist.",
-      },
-    ],
-  }),
+  head: () => {
+    const seo = getSeoMeta({
+      title: "Shop medicines — MediCart",
+      description: "Browse prescription and OTC medicines, vitamins, skincare, baby care, and health devices — verified by our pharmacist.",
+      path: "/shop",
+    });
+    return {
+      meta: seo.meta,
+      links: seo.links,
+    };
+  },
   component: ShopPage,
 });
 

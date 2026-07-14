@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrdersFn, getOrderByIdFn, createOrderFn, updateOrderStatusFn, toggleItemVerificationFn } from "@/api/orders";
+import { getOrdersFn, getOrderByIdFn, createOrderFn, updateOrderStatusFn, toggleItemVerificationFn, verifyPaymentFn } from "@/api/orders";
 import type { Order, OrderItem, PrescriptionFile, Address, ItemVerification } from "@prisma/client";
 
 // Define the full order type returned by our backend
@@ -82,6 +82,23 @@ export function useOrders() {
     },
   });
 
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async (data: Parameters<typeof verifyPaymentFn>[0]["data"]) => {
+      const res = await verifyPaymentFn({ data });
+      if (res.status === "error") throw new Error(res.message);
+      return res.data as FullOrder;
+    },
+    onSuccess: (updatedOrder) => {
+      queryClient.setQueryData(["orders"], (old: FullOrder[] | undefined) => {
+        if (!old) return old;
+        return old.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+      });
+      queryClient.setQueryData(["order", updatedOrder.id], updatedOrder);
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order", updatedOrder.id] });
+    },
+  });
+
   return {
     orders: (ordersQuery.data ?? []) as FullOrder[],
     isLoading: ordersQuery.isLoading,
@@ -91,6 +108,7 @@ export function useOrders() {
     updateOrderStatus: updateOrderStatusMutation.mutateAsync,
     isUpdating: updateOrderStatusMutation.isPending,
     toggleItemVerification: toggleItemVerificationMutation.mutateAsync,
+    verifyPayment: verifyPaymentMutation.mutateAsync,
   };
 }
 
