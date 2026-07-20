@@ -41,6 +41,7 @@ const MedicineSchema = z.object({
   dosageForm: z.string(),
   prescriptionRequired: z.boolean().default(false),
   inStock: z.boolean().default(true),
+  imageUrl: z.string().nullable().optional(),
 });
 
 export const createMedicineFn = createServerFn({ method: "POST" })

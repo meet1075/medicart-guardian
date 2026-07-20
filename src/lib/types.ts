@@ -24,6 +24,7 @@ export interface Medicine {
   dosageForm: string;
   prescriptionRequired: boolean;
   inStock?: boolean;
+  imageUrl?: string | null;
 }
 
 export interface CartItem {

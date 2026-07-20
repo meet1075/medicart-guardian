@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import { useMedicines } from "@/hooks/use-medicines";
-import { useState } from "react";
-import { Plus, Edit2, Trash2, Search, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Edit2, Trash2, Search, X, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Medicine } from "@prisma/client";
+import { uploadMedicineImageFn } from "@/api/upload";
 
 export const Route = createFileRoute("/admin/dashboard/medicines")({
   component: MedicinesAdminPage,
@@ -110,6 +111,7 @@ function MedicinesAdminPage() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border bg-surface-muted/50 text-xs uppercase text-muted-foreground">
               <tr>
+                <th className="px-4 py-3 font-semibold">Image</th>
                 <th className="px-4 py-3 font-semibold">Name</th>
                 <th className="px-4 py-3 font-semibold">MRP</th>
                 <th className="px-4 py-3 font-semibold">Stock</th>
@@ -119,6 +121,19 @@ function MedicinesAdminPage() {
             <tbody className="divide-y divide-border">
               {filteredMedicines.map((m) => (
                 <tr key={m.id} className="hover:bg-surface-muted/60">
+                  <td className="px-4 py-3">
+                    {(m as any).imageUrl ? (
+                      <img
+                        src={(m as any).imageUrl}
+                        alt={m.name}
+                        className="h-10 w-10 rounded-lg object-cover border border-border"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-surface-muted flex items-center justify-center border border-border">
+                        <ImageIcon size={16} className="text-muted-foreground" />
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{m.name}</div>
                     <div className="text-xs text-muted-foreground">{m.salt}</div>
@@ -199,7 +214,14 @@ function MedicineEditorModal({
     dosageForm: medicine?.dosageForm || "",
     prescriptionRequired: medicine?.prescriptionRequired || false,
     inStock: medicine?.inStock ?? true,
+    imageUrl: (medicine as any)?.imageUrl || null as string | null,
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    (medicine as any)?.imageUrl || null
+  );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -216,10 +238,69 @@ function MedicineEditorModal({
     }));
   }
 
-  function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit(formData);
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5 MB");
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
   }
+
+  function removeImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData((prev) => ({ ...prev, imageUrl: null }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+
+    let finalImageUrl = formData.imageUrl;
+
+    // If a new file was selected, upload it first
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+
+        // We need a stable ID: use existing medicine ID or a temp one
+        const tempId = medicine?.id ?? `new-${Date.now()}`;
+        const result = await uploadMedicineImageFn({
+          data: {
+            fileBase64: base64,
+            fileName: imageFile.name,
+            medicineId: tempId,
+          },
+        });
+        finalImageUrl = result.publicUrl;
+        toast.success("Image uploaded!");
+      } catch (err: any) {
+        toast.error(err.message || "Image upload failed");
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    onSubmit({ ...formData, imageUrl: finalImageUrl });
+  }
+
+  const busy = isSaving || isUploading;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
@@ -232,6 +313,62 @@ function MedicineEditorModal({
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           <form id="medicine-form" onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
+            {/* Image Upload */}
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Medicine Image (optional)
+              </label>
+              <div className="flex items-start gap-4">
+                {/* Preview */}
+                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-surface-muted">
+                  {imagePreview ? (
+                    <>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute right-1 top-1 rounded-full bg-destructive p-0.5 text-white shadow"
+                      >
+                        <X size={12} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+                      <ImageIcon size={24} />
+                      <span className="text-[10px]">No image</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload button */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold hover:bg-surface-muted"
+                  >
+                    <Upload size={14} />
+                    {imagePreview ? "Change Image" : "Upload Image"}
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    PNG, JPG, WebP · max 5 MB
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Name */}
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">Name</label>
               <input
@@ -242,6 +379,8 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* Salt */}
             <div className="col-span-2">
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Salt / Active Ingredients
@@ -254,10 +393,10 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* Brand */}
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Brand
-              </label>
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Brand</label>
               <input
                 required
                 name="brand"
@@ -266,6 +405,8 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* Dosage Form */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Dosage Form
@@ -279,6 +420,8 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* MRP */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 MRP (₹)
@@ -293,6 +436,8 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* Pack Size */}
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Pack Size
@@ -306,6 +451,8 @@ function MedicineEditorModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+
+            {/* Checkboxes */}
             <div className="flex items-center gap-2 pt-6">
               <input
                 type="checkbox"
@@ -345,10 +492,10 @@ function MedicineEditorModal({
           <button
             type="submit"
             form="medicine-form"
-            disabled={isSaving}
+            disabled={busy}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            {isSaving ? "Saving..." : "Save Medicine"}
+            {isUploading ? "Uploading image..." : isSaving ? "Saving..." : "Save Medicine"}
           </button>
         </div>
       </div>
