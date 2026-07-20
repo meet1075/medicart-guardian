@@ -1,4 +1,4 @@
-import { K as object, Y as string } from "../_libs/@better-auth/core+[...].mjs";
+import { _ as string, m as object } from "../_libs/zod.mjs";
 import { c as createServerFn } from "./esm-B50dUWcE.mjs";
 import { t as createServerRpc } from "./createServerRpc-BbGffMfs.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/prescription.functions-Dz0rurpH.js
