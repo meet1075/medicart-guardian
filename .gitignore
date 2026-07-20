@@ -32,4 +32,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-\n.vercel
+.vercel
