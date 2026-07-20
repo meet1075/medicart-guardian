@@ -2,6 +2,15 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./db";
 
+// Derive base URL: prefer BETTER_AUTH_URL only if it's a real deployment URL
+// (not localhost), otherwise let better-auth derive it from the incoming request.
+// This prevents the OAuth state_mismatch when BETTER_AUTH_URL is set to localhost.
+const getBaseUrl = () => {
+  const url = process.env.BETTER_AUTH_URL;
+  if (url && !url.includes("localhost")) return url;
+  return undefined; // better-auth derives from request origin
+};
+
 export const auth = betterAuth({
     database: prismaAdapter(db, {
         provider: "postgresql",
@@ -16,13 +25,12 @@ export const auth = betterAuth({
         },
     },
     secret: process.env.BETTER_AUTH_SECRET,
-    baseURL: process.env.BETTER_AUTH_URL,
+    baseURL: getBaseUrl(),
     // Allow requests from any Vercel preview/production deployment
     trustedOrigins: [
         "https://medicart-guardian.vercel.app",
         "http://localhost:8080",
         "http://localhost:3000",
-        ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
     ],
     user: {
         additionalFields: {
@@ -35,4 +43,3 @@ export const auth = betterAuth({
         },
     },
 });
-
