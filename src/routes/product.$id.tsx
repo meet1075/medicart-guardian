@@ -22,7 +22,7 @@ export const Route = createFileRoute("/product/$id")({
     
     const seo = getSeoMeta({
       title: `${loaderData.medicine.name} — ${loaderData.medicine.salt} | MediCart`,
-      description: loaderData.medicine.uses.slice(0, 155),
+      description: `${loaderData.medicine.name} (${loaderData.medicine.salt}) - Buy online at MediCart.`,
       path: `/product/${loaderData.medicine.id}`,
       type: "product",
     });
@@ -39,12 +39,6 @@ function ProductPage() {
   const { medicine } = Route.useLoaderData();
   const { addToCart } = useStore();
   const navigate = useNavigate();
-  const off = Math.max(0, Math.round(((medicine.mrp - medicine.price) / medicine.mrp) * 100));
-
-  const { medicines } = useMedicines();
-  const substitutes = medicines.filter(
-    (m) => m.id !== medicine.id && m.category === medicine.category,
-  ).slice(0, 4);
 
   return (
     <PublicLayout>
@@ -55,14 +49,14 @@ function ProductPage() {
             "@context": "https://schema.org/",
             "@type": "Product",
             name: medicine.name,
-            description: medicine.uses,
+            description: `${medicine.name} (${medicine.salt})`,
             sku: medicine.id,
             offers: {
               "@type": "Offer",
               url: `https://obatmedicare.com/product/${medicine.id}`,
               priceCurrency: "INR",
-              price: medicine.price,
-              availability: medicine.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              price: medicine.mrp,
+              availability: medicine.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
               itemCondition: "https://schema.org/NewCondition"
             }
           }),
@@ -98,19 +92,11 @@ function ProductPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground md:text-3xl">{medicine.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {medicine.salt} · <span className="font-medium">{medicine.manufacturer}</span>
+              {medicine.salt} · <span className="font-medium">{medicine.brand}</span>
             </p>
 
             <div className="mt-5 flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-foreground">₹{medicine.price}</span>
-              {off > 0 && (
-                <>
-                  <span className="text-base text-muted-foreground line-through">₹{medicine.mrp}</span>
-                  <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
-                    {off}% off
-                  </span>
-                </>
-              )}
+              <span className="text-3xl font-bold text-foreground">₹{medicine.mrp}</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">MRP incl. of all taxes · {medicine.packSize}</p>
 
@@ -159,35 +145,9 @@ function ProductPage() {
               </div>
             )}
 
-            <div className="mt-8 space-y-5 text-sm">
-              <Detail label="Uses" text={medicine.uses} />
-              <Detail label="How to use" text={medicine.howToUse} />
-              <Detail label="Side effects" text={medicine.sideEffects} />
-              <Detail label="Safety advice" text={medicine.safety} />
-            </div>
           </div>
         </div>
-
-        {substitutes.length > 0 && (
-          <section className="mt-14">
-            <h2 className="text-xl font-bold text-foreground">Substitutes & related</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {substitutes.map((s) => (
-                <MedicineCard key={s.id} medicine={s as any} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </PublicLayout>
-  );
-}
-
-function Detail({ label, text }: { label: string; text: string }) {
-  return (
-    <div>
-      <div className="text-xs font-semibold uppercase tracking-wider text-primary">{label}</div>
-      <p className="mt-1.5 text-foreground/85">{text}</p>
-    </div>
   );
 }

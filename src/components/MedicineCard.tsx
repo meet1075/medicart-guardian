@@ -7,8 +7,6 @@ import { toast } from "sonner";
 
 export function MedicineCard({ medicine }: { medicine: Medicine }) {
   const { addToCart } = useStore();
-  const off = Math.max(0, Math.round(((medicine.mrp - medicine.price) / medicine.mrp) * 100));
-
   return (
     <div className="group flex flex-col rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:shadow-md">
       <Link to="/product/$id" params={{ id: medicine.id }} className="block">
@@ -38,14 +36,8 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
       <div className="mt-3 flex items-end justify-between gap-2">
         <div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-base font-bold text-foreground">₹{medicine.price}</span>
-            {off > 0 && (
-              <span className="text-xs text-muted-foreground line-through">₹{medicine.mrp}</span>
-            )}
+            <span className="text-base font-bold text-foreground">₹{medicine.mrp}</span>
           </div>
-          {off > 0 && (
-            <div className="text-[10px] font-semibold text-success">{off}% off</div>
-          )}
         </div>
         <button
           type="button"

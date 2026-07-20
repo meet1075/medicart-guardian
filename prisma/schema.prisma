@@ -32,20 +32,10 @@ model Medicine {
   name                 String
   salt                 String
   brand                String
-  manufacturer         String
-  category             String
-  healthConcern        String[]
-  price                Float
   mrp                  Float
   packSize             String
   dosageForm           String
   prescriptionRequired Boolean     @default(false)
-  uses                 String
-  howToUse             String
-  sideEffects          String
-  safety               String
-  accent               String
-  substitutes          String[]
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   inStock              Boolean     @default(true)

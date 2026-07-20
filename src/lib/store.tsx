@@ -189,7 +189,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             name: m.name,
             salt: m.salt,
             qty: c.qty,
-            price: m.price,
+            price: m.mrp,
             dosageForm: m.dosageForm,
             prescriptionRequired: m.prescriptionRequired,
           };

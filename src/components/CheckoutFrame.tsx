@@ -26,7 +26,7 @@ export function CheckoutFrame({
   const items = cart
     .map((c) => ({ m: medicines.find((x) => x.id === c.medicineId), qty: c.qty }))
     .filter((x) => x.m) as { m: any; qty: number }[];
-  const subtotal = items.reduce((s, i) => s + i.m.price * i.qty, 0);
+  const subtotal = items.reduce((s, i) => s + i.m.mrp * i.qty, 0);
   const delivery = subtotal > 499 ? 0 : items.length ? 39 : 0;
   const total = subtotal + delivery;
 
@@ -83,7 +83,7 @@ export function CheckoutFrame({
                     <div className="font-medium text-foreground">{m.name}</div>
                     <div className="text-xs text-muted-foreground">Qty {qty} · {m.packSize}</div>
                   </div>
-                  <div className="whitespace-nowrap font-semibold">₹{(m.price * qty).toFixed(2)}</div>
+                  <div className="whitespace-nowrap font-semibold">₹{(m.mrp * qty).toFixed(2)}</div>
                 </div>
               ))}
             </div>

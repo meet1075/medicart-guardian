@@ -8,8 +8,6 @@ import { z } from "zod";
 
 const searchSchema = z.object({
   q: z.string().optional(),
-  category: z.string().optional(),
-  concern: z.string().optional(),
 });
 
 import { getSeoMeta } from "@/lib/seo";
@@ -31,17 +29,15 @@ export const Route = createFileRoute("/shop")({
 });
 
 function ShopPage() {
-  const { q, category, concern } = Route.useSearch();
+  const { q } = Route.useSearch();
   const { medicines, isLoading } = useMedicines();
   const [rxFilter, setRxFilter] = useState<"all" | "rx" | "otc">("all");
   const [maxPrice, setMaxPrice] = useState<number>(3000);
-  const [sortBy, setSortBy] = useState<"popular" | "price-asc" | "price-desc" | "discount">("popular");
+  const [sortBy, setSortBy] = useState<"popular" | "price-asc" | "price-desc">("popular");
   const [query, setQuery] = useState(q ?? "");
 
   const results = useMemo(() => {
     let list = [...medicines];
-    if (category) list = list.filter((m) => m.category === category);
-    if (concern) list = list.filter((m) => m.healthConcern.includes(concern as never));
     if (rxFilter !== "all") list = list.filter((m) => (rxFilter === "rx" ? m.prescriptionRequired : !m.prescriptionRequired));
     if (query) {
       const nq = query.toLowerCase();
@@ -52,37 +48,26 @@ function ShopPage() {
           m.brand.toLowerCase().includes(nq),
       );
     }
-    list = list.filter((m) => m.price <= maxPrice);
+    list = list.filter((m) => m.mrp <= maxPrice);
     switch (sortBy) {
       case "price-asc":
-        list.sort((a, b) => a.price - b.price);
+        list.sort((a, b) => a.mrp - b.mrp);
         break;
       case "price-desc":
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case "discount":
-        list.sort((a, b) => (b.mrp - b.price) / b.mrp - (a.mrp - a.price) / a.mrp);
+        list.sort((a, b) => b.mrp - a.mrp);
         break;
     }
     return list;
-  }, [category, concern, rxFilter, query, maxPrice, sortBy]);
-
-  const activeCategory = CATEGORIES.find((c) => c.id === category);
-  const activeConcern = HEALTH_CONCERNS.find((c) => c.id === concern);
+  }, [rxFilter, query, maxPrice, sortBy, medicines]);
 
   return (
     <PublicLayout>
       <div className="container-page py-6">
         <div className="text-xs text-muted-foreground">
           Home <span className="mx-1">/</span> Shop
-          {activeCategory && (
-            <>
-              <span className="mx-1">/</span> {activeCategory.label}
-            </>
-          )}
         </div>
         <h1 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">
-          {activeCategory?.label ?? activeConcern?.label ?? "All medicines"}
+          All medicines
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {results.length} products {query && `matching "${query}"`}
@@ -139,7 +124,6 @@ function ShopPage() {
               <option value="popular">Popularity</option>
               <option value="price-asc">Price: low to high</option>
               <option value="price-desc">Price: high to low</option>
-              <option value="discount">Best discount</option>
             </select>
           </div>
         </aside>

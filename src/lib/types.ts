@@ -19,20 +19,10 @@ export interface Medicine {
   name: string;
   salt: string;
   brand: string;
-  manufacturer: string;
-  category: Category;
-  healthConcern: HealthConcern[];
-  price: number;
   mrp: number;
   packSize: string;
   dosageForm: string;
   prescriptionRequired: boolean;
-  uses: string;
-  howToUse: string;
-  sideEffects: string;
-  safety: string;
-  accent: string; // token color for card visual
-  substitutes?: string[]; // ids
   inStock?: boolean;
 }
 

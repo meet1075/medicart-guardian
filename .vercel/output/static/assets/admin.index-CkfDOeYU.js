@@ -1,0 +1,1 @@
+import{r as e,t}from"./react-DKFUAf5x.js";import{t as n}from"./useNavigate-B5pecq1R.js";var r=e(t());function i(){let e=n();return(0,r.useEffect)(()=>{e({to:`/admin/dashboard`,replace:!0})},[e]),null}export{i as component};

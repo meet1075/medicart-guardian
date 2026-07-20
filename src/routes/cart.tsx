@@ -42,8 +42,7 @@ function CartPage() {
   const rxItems = items.filter((i) => i.m.prescriptionRequired);
   const otcItems = items.filter((i) => !i.m.prescriptionRequired);
 
-  const subtotal = items.reduce((s, i) => s + i.m.price * i.qty, 0);
-  const savings = items.reduce((s, i) => s + (i.m.mrp - i.m.price) * i.qty, 0);
+  const subtotal = items.reduce((s, i) => s + i.m.mrp * i.qty, 0);
   const delivery = subtotal > 499 ? 0 : items.length ? 39 : 0;
   const total = subtotal + delivery;
 
@@ -123,7 +122,6 @@ function CartPage() {
             </h2>
             <dl className="mt-4 space-y-2 text-sm">
               <Row label="Subtotal" value={`₹${subtotal.toFixed(2)}`} />
-              <Row label="You saved" value={`− ₹${savings.toFixed(2)}`} accent="text-success" />
               <Row label="Delivery" value={delivery === 0 ? "FREE" : `₹${delivery}`} />
               <div className="my-3 border-t border-border" />
               <Row label="Total" value={`₹${total.toFixed(2)}`} bold />
@@ -225,8 +223,8 @@ function CartRow({
             )}
           </div>
           <div className="text-right">
-            <div className="font-bold text-foreground">₹{(m.price * qty).toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">₹{m.price} each</div>
+            <div className="font-bold text-foreground">₹{(m.mrp * qty).toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground">₹{m.mrp} each</div>
           </div>
         </div>
 

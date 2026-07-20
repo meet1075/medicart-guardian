@@ -38,7 +38,7 @@ function PaymentStep() {
   const { createOrder: submitOrder, verifyPayment } = useOrders();
   const { medicines } = useMedicines();
   const navigate = useNavigate();
-  const [method, setMethod] = useState<Order["paymentMethod"]>("online");
+  const [method, setMethod] = useState<Order["paymentMethod"]>("upi");
   const [placing, setPlacing] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
 
@@ -79,7 +79,7 @@ function PaymentStep() {
           name: m.name,
           salt: m.salt,
           qty: c.qty,
-          price: m.price,
+          price: m.mrp,
           dosageForm: m.dosageForm,
           prescriptionRequired: m.prescriptionRequired,
         };
@@ -197,8 +197,8 @@ function PaymentStep() {
         <h2 className="text-lg font-semibold">Payment method</h2>
         <div className="mt-4 space-y-3">
           <PayOption
-            selected={method === "online"}
-            onClick={() => setMethod("online")}
+            selected={method === "upi"}
+            onClick={() => setMethod("upi")}
             icon={<ShieldCheck size={20} />}
             title="Pay Online Securely"
             subtitle="UPI, Cards, Netbanking via Razorpay"

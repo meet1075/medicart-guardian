@@ -111,8 +111,7 @@ function MedicinesAdminPage() {
             <thead className="border-b border-border bg-surface-muted/50 text-xs uppercase text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Price</th>
-                <th className="px-4 py-3 font-semibold">Category</th>
+                <th className="px-4 py-3 font-semibold">MRP</th>
                 <th className="px-4 py-3 font-semibold">Stock</th>
                 <th className="px-4 py-3 text-right font-semibold">Actions</th>
               </tr>
@@ -129,12 +128,7 @@ function MedicinesAdminPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-semibold">₹{m.price.toFixed(2)}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-primary-soft/50 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      {m.category}
-                    </span>
-                  </td>
+                  <td className="px-4 py-3 font-semibold">₹{m.mrp.toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div
@@ -200,18 +194,10 @@ function MedicineEditorModal({
     name: medicine?.name || "",
     salt: medicine?.salt || "",
     brand: medicine?.brand || "",
-    manufacturer: medicine?.manufacturer || "",
-    category: medicine?.category || "otc",
-    price: medicine?.price || 0,
     mrp: medicine?.mrp || 0,
     packSize: medicine?.packSize || "",
     dosageForm: medicine?.dosageForm || "",
     prescriptionRequired: medicine?.prescriptionRequired || false,
-    uses: medicine?.uses || "",
-    howToUse: medicine?.howToUse || "",
-    sideEffects: medicine?.sideEffects || "",
-    safety: medicine?.safety || "",
-    accent: medicine?.accent || "emerald",
     inStock: medicine?.inStock ?? true,
   });
 
@@ -282,34 +268,6 @@ function MedicineEditorModal({
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Manufacturer
-              </label>
-              <input
-                required
-                name="manufacturer"
-                value={formData.manufacturer}
-                onChange={handleChange}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Category
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              >
-                <option value="rx">Rx</option>
-                <option value="otc">OTC</option>
-                <option value="dermatology">Dermatology</option>
-                <option value="supplements">Supplements</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Dosage Form
               </label>
               <input
@@ -318,20 +276,6 @@ function MedicineEditorModal({
                 value={formData.dosageForm}
                 onChange={handleChange}
                 placeholder="e.g. Tablet, Syrup"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Price (₹)
-              </label>
-              <input
-                required
-                type="number"
-                step="0.01"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
@@ -387,56 +331,6 @@ function MedicineEditorModal({
               <label htmlFor="inStock" className="text-sm font-semibold">
                 In Stock
               </label>
-            </div>
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">Uses</label>
-              <textarea
-                required
-                name="uses"
-                value={formData.uses}
-                onChange={handleChange}
-                rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                How to use
-              </label>
-              <textarea
-                required
-                name="howToUse"
-                value={formData.howToUse}
-                onChange={handleChange}
-                rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Side effects
-              </label>
-              <textarea
-                required
-                name="sideEffects"
-                value={formData.sideEffects}
-                onChange={handleChange}
-                rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Safety / Warnings
-              </label>
-              <textarea
-                required
-                name="safety"
-                value={formData.safety}
-                onChange={handleChange}
-                rows={2}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
             </div>
           </form>
         </div>
