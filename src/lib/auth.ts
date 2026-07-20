@@ -17,6 +17,13 @@ export const auth = betterAuth({
     },
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
+    // Allow requests from any Vercel preview/production deployment
+    trustedOrigins: [
+        "https://medicart-guardian.vercel.app",
+        "http://localhost:8080",
+        "http://localhost:3000",
+        ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
+    ],
     user: {
         additionalFields: {
             role: {
@@ -28,3 +35,4 @@ export const auth = betterAuth({
         },
     },
 });
+
