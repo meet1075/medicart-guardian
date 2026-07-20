@@ -13,7 +13,12 @@ export default defineConfig({
     server: { entry: "server" },
   },
   nitro: {
-    preset: "vercel"
+    preset: "vercel",
+    vercel: {
+      functions: {
+        runtime: "nodejs20.x"
+      }
+    }
   },
   resolve: {
     tsconfigPaths: true
