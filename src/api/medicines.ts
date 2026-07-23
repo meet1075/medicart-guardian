@@ -39,7 +39,7 @@ const MedicineSchema = z.object({
   mrp: z.number().min(0),
   packSize: z.string(),
   dosageForm: z.string(),
-  prescriptionRequired: z.boolean().default(false),
+  prescriptionRequired: z.boolean().default(true),
   inStock: z.boolean().default(true),
   imageUrl: z.string().nullable().optional(),
 });

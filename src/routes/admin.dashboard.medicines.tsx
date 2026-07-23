@@ -212,7 +212,7 @@ function MedicineEditorModal({
     mrp: medicine?.mrp || 0,
     packSize: medicine?.packSize || "",
     dosageForm: medicine?.dosageForm || "",
-    prescriptionRequired: medicine?.prescriptionRequired || false,
+    prescriptionRequired: medicine?.prescriptionRequired ?? true,
     inStock: medicine?.inStock ?? true,
     imageUrl: (medicine as any)?.imageUrl || null as string | null,
   });

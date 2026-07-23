@@ -146,7 +146,7 @@ function LandingPage() {
             {[
               { value: "2016", label: "Founded", sub: "Third-gen enterprise" },
               { value: "5+", label: "Specialties", sub: "Medical departments" },
-              { value: "90+", label: "Products", sub: "Active formulations" },
+              { value: "100+", label: "Products", sub: "Active formulations" },
               { value: "Global", label: "Reach", sub: "Pan-India & Beyond" },
             ].map((s, i) => (
               <div

@@ -36,7 +36,7 @@ export const Route = createFileRoute("/about")({
 const STATS = [
   { label: "Founded", value: "2016", sub: "Third-generation enterprise" },
   { label: "Departments", value: "5+", sub: "Speciality focus areas" },
-  { label: "Products", value: "90+", sub: "Formulations & counting" },
+  { label: "Products", value: "100+", sub: "Formulations & counting" },
   { label: "Reach", value: "Pan-India", sub: "+ Global presence" },
 ];
 

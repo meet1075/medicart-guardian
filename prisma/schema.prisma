@@ -35,7 +35,7 @@ model Medicine {
   mrp                  Float
   packSize             String
   dosageForm           String
-  prescriptionRequired Boolean     @default(false)
+  prescriptionRequired Boolean     @default(true)
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   inStock              Boolean     @default(true)
