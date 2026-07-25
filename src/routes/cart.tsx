@@ -4,7 +4,7 @@ import { useStore } from "@/lib/store";
 import { useAuth } from "@/hooks/use-auth";
 import { useMedicines } from "@/hooks/use-medicines";
 import { MedicineVisual } from "@/components/MedicineVisual";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Info, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -30,8 +30,32 @@ function CartPage() {
   const navigate = useNavigate();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  const { medicines, isLoading } = useMedicines();
+  const { medicines, isLoading, isError } = useMedicines();
   
+  // Clean up cart if medicines were deleted from the database
+  useEffect(() => {
+    if (!isLoading && !isError && medicines.length > 0) {
+      cart.forEach((c) => {
+        if (!medicines.find((m) => m.id === c.medicineId)) {
+          removeFromCart(c.medicineId);
+        }
+      });
+    }
+  }, [isLoading, isError, medicines, cart, removeFromCart]);
+
+  if (isLoading) {
+    return (
+      <PublicLayout>
+        <div className="container-page py-20 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft text-primary animate-pulse">
+            <ShoppingBag size={28} />
+          </div>
+          <h1 className="mt-4 text-2xl font-bold">Loading your cart...</h1>
+        </div>
+      </PublicLayout>
+    );
+  }
+
   const items = cart
     .map((c) => {
       const m = medicines.find((x) => x.id === c.medicineId);

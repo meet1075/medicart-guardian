@@ -1,4 +1,3 @@
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -10,21 +9,19 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String?
-  name         String
-  role         String   @default("USER") // USER | ADMIN
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  orders        Order[]
-  addresses     Address[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  role          String    @default("USER")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
   image         String?
-  sessions      Session[]
   accounts      Account[]
-
+  addresses     Address[]
+  orders        Order[]
+  sessions      Session[]
 }
 
 model Medicine {
@@ -62,26 +59,22 @@ model Address {
 }
 
 model Order {
-  id        String   @id @default(cuid()) // E.g., MCXXX
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  subtotal Float
-  delivery Float
-  total    Float
-
-  hasRx              Boolean   @default(false)
+  id                 String             @id @default(cuid())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  subtotal           Float
+  delivery           Float
+  total              Float
+  hasRx              Boolean            @default(false)
   paymentMethod      String
-  status             String    @default("placed")
+  status             String             @default("placed")
   prescriptionStatus String?
   reviewedBy         String?
   reviewedAt         DateTime?
   rejectReason       String?
-
   razorpayOrderId    String?
   razorpayPaymentId  String?
   razorpaySignature  String?
-
   shiprocketOrderId  String?
   shipmentId         String?
   awbCode            String?
@@ -89,34 +82,30 @@ model Order {
   trackingUrl        String?
   shipmentStatus     String?
   pickupStatus       String?
-  isShipmentCreated  Boolean   @default(false)
+  isShipmentCreated  Boolean            @default(false)
   shipmentError      String?
   lastShipmentSync   DateTime?
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
-
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
-
-  items             OrderItem[]
-  prescriptionFiles PrescriptionFile[]
-  itemVerifications ItemVerification[]
+  userId             String?
+  addressId          String
+  itemVerifications  ItemVerification[]
+  address            Address            @relation(fields: [addressId], references: [id])
+  user               User?              @relation(fields: [userId], references: [id])
+  items              OrderItem[]
+  prescriptionFiles  PrescriptionFile[]
 }
 
 model OrderItem {
-  id                   String  @id @default(cuid())
+  id                   String   @id @default(cuid())
   orderId              String
   medicineId           String
-  name                 String // snapshot
-  salt                 String? // snapshot
-  dosageForm           String? // snapshot
+  name                 String
+  salt                 String?
+  dosageForm           String?
   qty                  Int
-  price                Float // snapshot
-  prescriptionRequired Boolean @default(false)
-
-  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  medicine Medicine @relation(fields: [medicineId], references: [id])
+  price                Float
+  prescriptionRequired Boolean  @default(false)
+  medicine             Medicine @relation(fields: [medicineId], references: [id])
+  order                Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model PrescriptionFile {
@@ -124,8 +113,8 @@ model PrescriptionFile {
   orderId            String
   name               String
   mimeType           String
-  dataUrl            String // the base64 or url
-  aiExtractionResult Json? // parsed extraction
+  dataUrl            String
+  aiExtractionResult Json?
   order              Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
@@ -133,16 +122,15 @@ model ItemVerification {
   id                 String  @id @default(cuid())
   orderId            String
   medicineId         String
-  aiStatus           String // matched, possible, not_found
+  aiStatus           String
   pharmacistApproved Boolean @default(false)
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order              Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -150,7 +138,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@index([userId])
 }
 
@@ -159,7 +146,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -169,6 +155,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

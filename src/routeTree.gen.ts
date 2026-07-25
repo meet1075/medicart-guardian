@@ -29,6 +29,7 @@ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDashboardUsersRouteImport } from './routes/admin.dashboard.users'
 import { Route as AdminDashboardPrescriptionsRouteImport } from './routes/admin.dashboard.prescriptions'
 import { Route as AdminDashboardMedicinesRouteImport } from './routes/admin.dashboard.medicines'
+import { Route as AdminDashboardBulkImagesRouteImport } from './routes/admin.dashboard.bulk-images'
 import { Route as AdminDashboardOrdersIndexRouteImport } from './routes/admin.dashboard.orders.index'
 import { Route as AdminDashboardPrescriptionsIdRouteImport } from './routes/admin.dashboard.prescriptions.$id'
 import { Route as AdminDashboardOrdersIdRouteImport } from './routes/admin.dashboard.orders.$id'
@@ -134,6 +135,12 @@ const AdminDashboardMedicinesRoute = AdminDashboardMedicinesRouteImport.update({
   path: '/medicines',
   getParentRoute: () => AdminDashboardRoute,
 } as any)
+const AdminDashboardBulkImagesRoute =
+  AdminDashboardBulkImagesRouteImport.update({
+    id: '/bulk-images',
+    path: '/bulk-images',
+    getParentRoute: () => AdminDashboardRoute,
+  } as any)
 const AdminDashboardOrdersIndexRoute =
   AdminDashboardOrdersIndexRouteImport.update({
     id: '/orders/',
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/dashboard/bulk-images': typeof AdminDashboardBulkImagesRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/users': typeof AdminDashboardUsersRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/dashboard/bulk-images': typeof AdminDashboardBulkImagesRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/users': typeof AdminDashboardUsersRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/order/$id': typeof OrderIdRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/dashboard/bulk-images': typeof AdminDashboardBulkImagesRoute
   '/admin/dashboard/medicines': typeof AdminDashboardMedicinesRoute
   '/admin/dashboard/prescriptions': typeof AdminDashboardPrescriptionsRouteWithChildren
   '/admin/dashboard/users': typeof AdminDashboardUsersRoute
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin/'
+    | '/admin/dashboard/bulk-images'
     | '/admin/dashboard/medicines'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/users'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin'
+    | '/admin/dashboard/bulk-images'
     | '/admin/dashboard/medicines'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/users'
@@ -296,6 +308,7 @@ export interface FileRouteTypes {
     | '/order/$id'
     | '/product/$id'
     | '/admin/'
+    | '/admin/dashboard/bulk-images'
     | '/admin/dashboard/medicines'
     | '/admin/dashboard/prescriptions'
     | '/admin/dashboard/users'
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardMedicinesRouteImport
       parentRoute: typeof AdminDashboardRoute
     }
+    '/admin/dashboard/bulk-images': {
+      id: '/admin/dashboard/bulk-images'
+      path: '/bulk-images'
+      fullPath: '/admin/dashboard/bulk-images'
+      preLoaderRoute: typeof AdminDashboardBulkImagesRouteImport
+      parentRoute: typeof AdminDashboardRoute
+    }
     '/admin/dashboard/orders/': {
       id: '/admin/dashboard/orders/'
       path: '/orders'
@@ -503,6 +523,7 @@ const AdminDashboardPrescriptionsRouteWithChildren =
   )
 
 interface AdminDashboardRouteChildren {
+  AdminDashboardBulkImagesRoute: typeof AdminDashboardBulkImagesRoute
   AdminDashboardMedicinesRoute: typeof AdminDashboardMedicinesRoute
   AdminDashboardPrescriptionsRoute: typeof AdminDashboardPrescriptionsRouteWithChildren
   AdminDashboardUsersRoute: typeof AdminDashboardUsersRoute
@@ -511,6 +532,7 @@ interface AdminDashboardRouteChildren {
 }
 
 const AdminDashboardRouteChildren: AdminDashboardRouteChildren = {
+  AdminDashboardBulkImagesRoute: AdminDashboardBulkImagesRoute,
   AdminDashboardMedicinesRoute: AdminDashboardMedicinesRoute,
   AdminDashboardPrescriptionsRoute:
     AdminDashboardPrescriptionsRouteWithChildren,

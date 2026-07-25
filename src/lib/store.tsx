@@ -27,7 +27,7 @@ const ADMIN_KEY = "medicart.admin.v1";
 
 interface StoreContext {
   cart: CartItem[];
-  addToCart: (medicineId: string, qty?: number) => void;
+  addToCart: (medicine: any, qty?: number) => void;
   updateQty: (medicineId: string, qty: number) => void;
   removeFromCart: (medicineId: string) => void;
   clearCart: () => void;
@@ -134,15 +134,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const addToCart = useCallback((medicineId: string, qty = 1) => {
+  const addToCart = useCallback((medicine: any, qty = 1) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.medicineId === medicineId);
+      const existing = prev.find((c) => c.medicineId === medicine.id);
       if (existing) {
         return prev.map((c) =>
-          c.medicineId === medicineId ? { ...c, qty: c.qty + qty } : c,
+          c.medicineId === medicine.id ? { ...c, qty: c.qty + qty } : c,
         );
       }
-      return [...prev, { medicineId, qty }];
+      return [...prev, { 
+        medicineId: medicine.id, 
+        qty, 
+        name: medicine.name, 
+        salt: medicine.salt, 
+        mrp: medicine.mrp, 
+        dosageForm: medicine.dosageForm, 
+        prescriptionRequired: medicine.prescriptionRequired 
+      }];
     });
   }, []);
 
@@ -166,7 +174,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const cartCount = useMemo(() => cart.reduce((n, c) => n + c.qty, 0), [cart]);
   const cartHasRx = useMemo(
-    () => cart.some((c) => getMedicine(c.medicineId)?.prescriptionRequired),
+    () => cart.some((c) => c.prescriptionRequired),
     [cart],
   );
 
@@ -182,19 +190,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }): Order => {
       const items = cart
         .map((c) => {
-          const m = getMedicine(c.medicineId);
-          if (!m) return null;
           return {
-            medicineId: m.id,
-            name: m.name,
-            salt: m.salt,
+            medicineId: c.medicineId,
+            name: c.name || "Unknown Medicine",
+            salt: c.salt || "",
             qty: c.qty,
-            price: m.mrp,
-            dosageForm: m.dosageForm,
-            prescriptionRequired: m.prescriptionRequired,
+            price: c.mrp || 0,
+            dosageForm: c.dosageForm || "Tablet",
+            prescriptionRequired: !!c.prescriptionRequired,
           };
         })
-        .filter(Boolean) as Order["items"];
+        .filter((i) => i.price > 0) as Order["items"];
 
       const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
       const delivery = address.deliverySlot === "express" ? 79 : subtotal > 499 ? 0 : 39;

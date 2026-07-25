@@ -27,7 +27,7 @@ export const uploadMedicineImageFn = createServerFn({ method: "POST" })
     }
 
     const supabase = getSupabase();
-    const bucket = "medicine-images";
+    const bucket = "obat_medicine_images";
 
     // Decode base64 → Buffer
     const base64Data = data.fileBase64.replace(/^data:[^;]+;base64,/, "");

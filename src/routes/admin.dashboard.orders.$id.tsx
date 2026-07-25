@@ -280,7 +280,7 @@ function OrderDetailsPage() {
               <div className="text-xs text-muted-foreground mb-2">Update Fulfillment Status</div>
               <select
                 value={order.status}
-                onChange={(e) => updateOrderStatus({ orderId: order.id, status: e.target.value })}
+                onChange={(e) => updateOrderStatus({ orderId: order.id, status: e.target.value as any })}
                 disabled={isUpdating}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary disabled:opacity-50 transition-colors"
               >

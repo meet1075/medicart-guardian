@@ -1,12 +1,17 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, Package, FileText, LogOut, Cross, Users } from "lucide-react";
+import { LayoutDashboard, Package, FileText, LogOut, Cross, Users, Image as ImageIcon } from "lucide-react";
 import { useEffect } from "react";
+import { checkIsAdminFn } from "@/api/admin";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [{ title: "MediCart — Admin" }, { name: "robots", content: "noindex" }],
   }),
+  beforeLoad: async () => {
+    const { isAdmin } = await checkIsAdminFn();
+    if (!isAdmin) throw redirect({ to: "/login", replace: true });
+  },
   component: AdminLayout,
 });
 
@@ -40,6 +45,7 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
     { key: "prescriptions", label: "Prescriptions", icon: FileText, to: "/admin/dashboard/prescriptions" as const },
     { key: "medicines", label: "Medicines", icon: Package, to: "/admin/dashboard/medicines" as const },
     { key: "users", label: "Users", icon: Users, to: "/admin/dashboard/users" as const },
+    { key: "bulk-images", label: "Bulk Images", icon: ImageIcon, to: "/admin/dashboard/bulk-images" as const },
   ];
 
   return (

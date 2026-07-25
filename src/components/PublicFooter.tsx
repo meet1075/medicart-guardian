@@ -66,11 +66,7 @@ export function PublicFooter() {
                 About Us
               </Link>
             </li>
-            <li>
-              <Link to="/our-products" className="hover:text-primary">
-                Our Products
-              </Link>
-            </li>
+
             <li>
               <Link to="/shop" className="hover:text-primary">
                 Online Shop

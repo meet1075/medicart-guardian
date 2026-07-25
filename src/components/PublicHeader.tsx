@@ -2,7 +2,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ShoppingCart, Search, MapPin, Menu, X } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useMedicines } from "@/hooks/use-medicines";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,7 +11,6 @@ import logoImg from "@/assets/obat-logo.png";
 
 const NAV_LINKS = [
   { to: "/about", label: "About" },
-  { to: "/our-products", label: "Our Products" },
   { to: "/shop", label: "Shop" },
   { to: "/track", label: "Track Order" },
   { to: "/contact", label: "Contact" },
@@ -21,8 +21,32 @@ export function PublicHeader() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [q, setQ] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout, isLoading: authLoading } = useAuth();
+  const { medicines } = useMedicines();
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredMedicines = q.trim()
+    ? medicines
+        .filter(
+          (m) =>
+            m.name.toLowerCase().includes(q.toLowerCase()) ||
+            m.salt.toLowerCase().includes(q.toLowerCase()) ||
+            m.brand.toLowerCase().includes(q.toLowerCase())
+        )
+        .slice(0, 5)
+    : [];
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
@@ -66,28 +90,77 @@ export function PublicHeader() {
         </div>
 
         {/* Search bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            navigate({ to: "/shop", search: { q } });
-          }}
-          className="flex flex-1 items-center rounded-lg border border-border bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
-        >
-          <Search size={18} className="ml-3 text-muted-foreground" />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search medicine, salt, or brand — e.g. Dolo, Paracetamol"
-            className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="submit"
-            className="mr-1 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        <div ref={searchContainerRef} className="relative flex flex-1 max-w-lg">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setIsFocused(false);
+              navigate({ to: "/shop", search: { q } });
+            }}
+            className="flex w-full flex-1 items-center rounded-lg border border-border bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
           >
-            Search
-          </button>
-        </form>
+            <Search size={18} className="ml-3 text-muted-foreground" />
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              placeholder="Search medicine, salt, or brand"
+              className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <button
+              type="submit"
+              className="mr-1 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Search Dropdown */}
+          {isFocused && q.trim().length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-lg border border-border bg-background shadow-xl">
+              {filteredMedicines.length > 0 ? (
+                <ul className="py-2">
+                  {filteredMedicines.map((med) => (
+                    <li key={med.id}>
+                      <Link
+                        to="/product/$id"
+                        params={{ id: med.id }}
+                        onClick={() => {
+                          setIsFocused(false);
+                          setQ("");
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted transition-colors"
+                      >
+                        <Search size={16} className="text-muted-foreground shrink-0" />
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-sm font-medium text-foreground truncate">{med.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{med.salt}</span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                  <li className="border-t border-border mt-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsFocused(false);
+                        navigate({ to: "/shop", search: { q } });
+                      }}
+                      className="w-full text-center px-4 py-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      See all results for "{q}"
+                    </button>
+                  </li>
+                </ul>
+              ) : (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No products found for "{q}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 lg:flex">

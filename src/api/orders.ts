@@ -7,6 +7,17 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { tryCreateShiprocketShipment } from "./shiprocket.api";
 
+const VALID_ORDER_STATUSES = [
+  "payment_pending",
+  "under_review",
+  "action_needed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+type OrderStatus = (typeof VALID_ORDER_STATUSES)[number];
+
 export const getOrdersFn = createServerFn({ method: "GET" })
   .handler(async (): Promise<ApiResponse> => {
     try {
@@ -110,8 +121,43 @@ export const createOrderFn = createServerFn({ method: "POST" })
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in to place an order", 401);
 
+      // --- Server-side price verification ---
+      // Re-fetch prices from DB to prevent client-side price manipulation
+      const medicineIds = data.items.map(i => i.medicineId);
+      const dbMedicines = await db.medicine.findMany({
+        where: { id: { in: medicineIds } },
+        select: { id: true, mrp: true, prescriptionRequired: true, inStock: true },
+      });
+      const priceMap = new Map(dbMedicines.map(m => [m.id, m]));
+
+      // Validate each item's price and availability
+      for (const item of data.items) {
+        const dbMed = priceMap.get(item.medicineId);
+        if (!dbMed) return errorResponse("Invalid medicine in cart", undefined, 400);
+        if (!dbMed.inStock) return errorResponse(`${item.name} is out of stock`, undefined, 400);
+        // Allow ±1 rupee tolerance for rounding differences
+        if (Math.abs(dbMed.mrp - item.price) > 1) {
+          return errorResponse(`Price mismatch for ${item.name}. Please refresh your cart.`, undefined, 400);
+        }
+      }
+
+      // Re-compute totals server-side
+      const DELIVERY_FEE = 40;
+      const serverSubtotal = data.items.reduce((sum, item) => {
+        const dbMed = priceMap.get(item.medicineId)!;
+        return sum + dbMed.mrp * item.qty;
+      }, 0);
+      const serverDelivery = data.delivery; // delivery slot logic unchanged
+      const serverTotal = serverSubtotal + serverDelivery;
+
+      // Reject if client total is more than ₹5 off from server-computed total
+      if (Math.abs(serverTotal - data.total) > 5) {
+        return errorResponse("Order total mismatch. Please refresh your cart.", undefined, 400);
+      }
+      // --- End price verification ---
+
       let rzpOrderId: string | undefined = undefined;
-      let initialStatus = data.hasRx ? "under_review" : "processing";
+      let initialStatus: OrderStatus = data.hasRx ? "under_review" : "processing";
       const isOnline = data.paymentMethod !== "cod";
 
       if (isOnline) {
@@ -122,7 +168,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
             key_secret: process.env.RAZORPAY_KEY_SECRET!,
           });
           const rzpOrder = await rzp.orders.create({
-            amount: Math.round(data.total * 100),
+            amount: Math.round(serverTotal * 100), // use server-computed total
             currency: "INR",
           });
           rzpOrderId = rzpOrder.id;
@@ -135,9 +181,9 @@ export const createOrderFn = createServerFn({ method: "POST" })
       const order = await db.order.create({
         data: {
           user: { connect: { id: session.id } },
-          subtotal: data.subtotal,
-          delivery: data.delivery,
-          total: data.total,
+          subtotal: serverSubtotal,
+          delivery: serverDelivery,
+          total: serverTotal,
           hasRx: data.hasRx,
           paymentMethod: data.paymentMethod,
           status: initialStatus,
@@ -156,7 +202,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
               salt: item.salt,
               dosageForm: item.dosageForm,
               qty: item.qty,
-              price: item.price,
+              price: priceMap.get(item.medicineId)!.mrp, // use server price
               prescriptionRequired: item.prescriptionRequired,
             }))
           },
@@ -199,10 +245,10 @@ export const createOrderFn = createServerFn({ method: "POST" })
 export const updateOrderStatusFn = createServerFn({ method: "POST" })
   .validator(z.object({
     orderId: z.string(),
-    status: z.string(),
-    prescriptionStatus: z.string().optional(),
+    status: z.enum(VALID_ORDER_STATUSES),
+    prescriptionStatus: z.enum(["pending", "verified", "rejected"]).optional(),
     reviewer: z.string().optional(),
-    rejectReason: z.string().optional(),
+    rejectReason: z.string().max(500).optional(),
   }))
   .handler(async ({ data }): Promise<ApiResponse> => {
     try {
@@ -268,6 +314,20 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in", 401);
 
+      // IDOR check: ensure the order belongs to this user
+      const existingOrder = await db.order.findUnique({
+        where: { id: data.orderId },
+        select: { userId: true, razorpayOrderId: true },
+      });
+      if (!existingOrder) return errorResponse("Order not found", undefined, 404);
+      if (existingOrder.userId !== session.id) {
+        return errorResponse("Forbidden", undefined, 403);
+      }
+      // Ensure the Razorpay order ID matches what we generated server-side
+      if (existingOrder.razorpayOrderId !== data.razorpayOrderId) {
+        return errorResponse("Payment verification failed", "Order ID mismatch", 400);
+      }
+
       const secret = process.env.RAZORPAY_KEY_SECRET!;
       const hmac = crypto.createHmac("sha256", secret);
       hmac.update(`${data.razorpayOrderId}|${data.razorpayPaymentId}`);
@@ -282,7 +342,7 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
         data: {
           razorpayPaymentId: data.razorpayPaymentId,
           razorpaySignature: data.razorpaySignature,
-          status: "processing", // Or under_review if we want to add that check here
+          status: "processing",
         },
         include: {
           items: true,

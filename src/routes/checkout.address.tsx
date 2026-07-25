@@ -9,13 +9,13 @@ import { toast } from "sonner";
 const PENDING_ADDRESS = "medicart.pending-address.v1";
 
 const addressSchema = z.object({
-  fullName: z.string().trim().min(2, "Enter your full name").max(80),
-  phone: z.string().trim().regex(/^\+?\d[\d\s-]{7,14}$/, "Enter a valid phone number"),
-  line1: z.string().trim().min(3, "Address line 1 required").max(120),
+  fullName: z.string().trim().min(2, "Enter your full name").max(20, "Full name must be at most 20 characters"),
+  phone: z.string().trim().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  line1: z.string().trim().min(3, "Address line 1 is required").max(120),
   line2: z.string().trim().max(120).optional(),
-  city: z.string().trim().min(2).max(60),
-  state: z.string().trim().min(2).max(60),
-  pincode: z.string().trim().regex(/^\d{5,6}$/, "Enter a valid pincode"),
+  city: z.string().trim().min(2, "City is required").max(60),
+  state: z.string().trim().min(2, "State is required").max(60),
+  pincode: z.string().trim().regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
   type: z.enum(["Home", "Work"]),
   deliverySlot: z.enum(["standard", "express"]),
   save: z.boolean().optional(),
@@ -113,7 +113,7 @@ function AddressStep() {
               value={values.fullName}
               onChange={(e) => update("fullName", e.target.value)}
               className={inputClass(!!errors.fullName)}
-              maxLength={80}
+              maxLength={20}
             />
           </Field>
           <Field label="Phone" error={errors.phone}>
@@ -121,7 +121,7 @@ function AddressStep() {
               value={values.phone}
               onChange={(e) => update("phone", e.target.value)}
               className={inputClass(!!errors.phone)}
-              maxLength={15}
+              maxLength={10}
             />
           </Field>
           <Field label="Address line 1" error={errors.line1} className="sm:col-span-2">

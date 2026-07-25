@@ -7,7 +7,6 @@ import { Banknote, CreditCard, Smartphone, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useOrders } from "@/hooks/use-orders";
 import { useMedicines } from "@/hooks/use-medicines";
-import { compareMedicine } from "@/lib/fuzzy-match";
 
 const PENDING_ADDRESS = "medicart.pending-address.v1";
 const PRESCRIPTION_KEY = "medicart.pending-prescription.v1";
@@ -90,15 +89,10 @@ function PaymentStep() {
     const delivery = address.deliverySlot === "express" ? 79 : subtotal > 499 ? 0 : 39;
     const hasRx = items.some((i) => i.prescriptionRequired);
 
-    const extracted = files.flatMap((f) => f.extraction?.medicines ?? []);
     const itemVerifications = items
       .filter((i) => i.prescriptionRequired)
       .map((i) => {
-        const m = medicines.find((x) => x.id === i.medicineId)!;
-        const aiStatus = extracted.length
-          ? compareMedicine({ name: m.name, salt: m.salt, brand: m.brand }, extracted)
-          : "not_found";
-        return { medicineId: i.medicineId, aiStatus, pharmacistApproved: false };
+        return { medicineId: i.medicineId, aiStatus: "not_found", pharmacistApproved: false };
       });
 
     const pfData = files.map(f => ({

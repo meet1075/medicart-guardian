@@ -106,7 +106,7 @@ function ProductPage() {
                 disabled={!medicine.inStock}
                 onClick={() => {
                   if (!medicine.inStock) return;
-                  addToCart(medicine.id);
+                  addToCart(medicine);
                   toast.success(`${medicine.name} added to cart`);
                 }}
                 className={`flex-1 rounded-md border px-6 py-3 text-sm font-semibold transition-colors ${
@@ -122,7 +122,7 @@ function ProductPage() {
                 disabled={!medicine.inStock}
                 onClick={() => {
                   if (!medicine.inStock) return;
-                  addToCart(medicine.id);
+                  addToCart(medicine);
                   navigate({ to: "/cart" });
                 }}
                 className={`flex-1 rounded-md px-6 py-3 text-sm font-semibold transition-colors ${

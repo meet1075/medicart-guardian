@@ -25,25 +25,38 @@ export function MedicineVisual({
 
   return (
     <div
-      className={`${dim} w-full rounded-lg flex items-center justify-center relative overflow-hidden`}
-      style={{
-        background: `linear-gradient(135deg, ${DEFAULT_ACCENT}15, ${DEFAULT_ACCENT}05)`,
-      }}
+      className={`${dim} w-full rounded-lg flex items-center justify-center relative overflow-hidden bg-surface-muted`}
       aria-hidden
     >
-      <div
-        className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-20"
-        style={{ background: DEFAULT_ACCENT }}
-      />
-      <div
-        className="absolute -left-4 -bottom-4 h-16 w-16 rounded-full opacity-10"
-        style={{ background: DEFAULT_ACCENT }}
-      />
-      <Icon size={iconSize} style={{ color: DEFAULT_ACCENT }} strokeWidth={1.5} />
-      {size !== "sm" && (
-        <div className="absolute bottom-2 left-3 text-[10px] font-medium uppercase tracking-wider text-foreground/50">
-          {medicine.dosageForm}
-        </div>
+      {medicine.imageUrl ? (
+        <img 
+          src={medicine.imageUrl} 
+          alt={medicine.name}
+          className="h-full w-full object-contain p-2"
+        />
+      ) : (
+        <>
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${DEFAULT_ACCENT}15, ${DEFAULT_ACCENT}05)`,
+            }}
+          />
+          <div
+            className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-20"
+            style={{ background: DEFAULT_ACCENT }}
+          />
+          <div
+            className="absolute -left-4 -bottom-4 h-16 w-16 rounded-full opacity-10"
+            style={{ background: DEFAULT_ACCENT }}
+          />
+          <Icon size={iconSize} style={{ color: DEFAULT_ACCENT }} strokeWidth={1.5} className="z-10 relative" />
+          {size !== "sm" && (
+            <div className="absolute bottom-2 left-3 text-[10px] font-medium uppercase tracking-wider text-foreground/50 z-10">
+              {medicine.dosageForm}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

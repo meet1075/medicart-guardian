@@ -30,6 +30,11 @@ export interface Medicine {
 export interface CartItem {
   medicineId: string;
   qty: number;
+  name?: string;
+  salt?: string;
+  mrp?: number;
+  dosageForm?: string;
+  prescriptionRequired?: boolean;
 }
 
 export interface PrescriptionExtraction {

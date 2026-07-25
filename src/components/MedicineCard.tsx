@@ -44,7 +44,7 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
           disabled={!medicine.inStock}
           onClick={() => {
             if (!medicine.inStock) return;
-            addToCart(medicine.id);
+            addToCart(medicine);
             toast.success(`${medicine.name} added to cart`);
           }}
           className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${

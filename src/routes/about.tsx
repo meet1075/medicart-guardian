@@ -402,10 +402,10 @@ function AboutPage() {
               Contact Us <ArrowRight size={16} />
             </Link>
             <Link
-              to="/our-products"
+              to="/shop"
               className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
             >
-              Our Products <ArrowRight size={16} />
+              Shop <ArrowRight size={16} />
             </Link>
           </div>
         </div>

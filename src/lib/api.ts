@@ -24,10 +24,16 @@ export function errorResponse(
   error?: string,
   code: number = 400,
 ): ApiResponse<never> {
+  // Never leak internal error details (DB schema, stack traces) to clients in production
+  const safeError =
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : error;
+
   return {
     status: "error",
     code,
     message,
-    error,
+    error: safeError,
   };
 }
