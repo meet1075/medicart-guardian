@@ -18,7 +18,7 @@ import {
   Award,
   HeartPulse,
 } from "lucide-react";
-import heroImg from "@/assets/hero-pharmacy.jpg";
+
 
 import { getSeoMeta } from "@/lib/seo";
 
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
       meta: seo.meta,
       links: [
         ...seo.links,
-        { rel: "preload", as: "image", href: heroImg },
+        { rel: "preload", as: "image", href: "/hero-pharmacy.jpg" },
       ],
     };
   },
@@ -53,7 +53,7 @@ function LandingPage() {
             "@type": "Organization",
             name: "Obat Medicare Pvt Ltd",
             url: "https://obatmedicare.com",
-            logo: "https://obatmedicare.com/favicon.ico",
+            logo: "https://obatmedicare.com/logo.svg",
             description: "A third-generation, super-specialty pharmaceutical company.",
           }),
         }}
@@ -110,7 +110,7 @@ function LandingPage() {
             {/* Glassmorphism image container */}
             <div className="relative overflow-hidden rounded-3xl border border-border bg-surface/50 p-2 shadow-2xl backdrop-blur-xl">
               <img
-                src={heroImg}
+                src="/hero-pharmacy.jpg"
                 alt="Pharmaceutical formulations and quality control"
                 width={800}
                 height={600}

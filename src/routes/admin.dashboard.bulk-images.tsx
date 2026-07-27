@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { identifyMedicineImageFn, updateMedicineFn } from "@/api/medicines";
+import { updateMedicineFn } from "@/api/medicines";
 import { uploadMedicineImageFn } from "@/api/upload";
 import { useMedicines } from "@/hooks/use-medicines";
 import { Upload, Image as ImageIcon, CheckCircle, Loader2, AlertCircle, X, Search } from "lucide-react";

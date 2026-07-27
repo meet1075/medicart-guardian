@@ -142,12 +142,11 @@ export const createOrderFn = createServerFn({ method: "POST" })
       }
 
       // Re-compute totals server-side
-      const DELIVERY_FEE = 40;
       const serverSubtotal = data.items.reduce((sum, item) => {
         const dbMed = priceMap.get(item.medicineId)!;
         return sum + dbMed.mrp * item.qty;
       }, 0);
-      const serverDelivery = data.delivery; // delivery slot logic unchanged
+      const serverDelivery = data.address.deliverySlot === "express" ? 79 : serverSubtotal > 499 ? 0 : 39;
       const serverTotal = serverSubtotal + serverDelivery;
 
       // Reject if client total is more than ₹5 off from server-computed total

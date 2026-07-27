@@ -33,7 +33,9 @@ export const uploadMedicineImageFn = createServerFn({ method: "POST" })
     const base64Data = data.fileBase64.replace(/^data:[^;]+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
-    const ext = data.fileName.split(".").pop() ?? "jpg";
+    const rawExt = data.fileName.split(".").pop()?.toLowerCase() ?? "jpg";
+    const allowedExts = ["jpg", "jpeg", "png", "webp"];
+    const ext = allowedExts.includes(rawExt) ? rawExt : "jpg";
     const path = `${data.medicineId}.${ext}`;
 
     const { error } = await supabase.storage

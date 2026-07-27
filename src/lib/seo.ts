@@ -12,7 +12,7 @@ export function getSeoMeta({
   title,
   description,
   path,
-  image = "/favicon.ico",
+  image = "/logo.svg",
   type = "website",
 }: SeoProps) {
   const url = `${BASE_URL}${path}`;

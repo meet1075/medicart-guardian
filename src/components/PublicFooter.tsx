@@ -1,6 +1,5 @@
 import { ShieldCheck, Truck, Lock, Phone, Mail, MapPin, Linkedin } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import logoImg from "@/assets/obat-logo.png";
 
 export function PublicFooter() {
   return (
@@ -36,7 +35,7 @@ export function PublicFooter() {
         {/* Brand */}
         <div className="lg:col-span-1">
           <div className="flex items-center">
-            <img src={logoImg} alt="Obat Medicare" width={192} height={48} loading="lazy" className="h-12 w-auto object-contain" />
+            <img src="/logo.svg" alt="Obat Medicare" width={192} height={48} loading="lazy" className="h-12 w-auto object-contain" />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
             Obat Medicare Pvt Ltd is a fast-growing Indian pharmaceutical
