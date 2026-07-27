@@ -44,6 +44,16 @@ export function PublicHeader() {
             m.salt.toLowerCase().includes(q.toLowerCase()) ||
             m.brand.toLowerCase().includes(q.toLowerCase())
         )
+        .sort((a, b) => {
+          const qLower = q.toLowerCase();
+          const aStarts = a.name.toLowerCase().startsWith(qLower) ? 1 : 0;
+          const bStarts = b.name.toLowerCase().startsWith(qLower) ? 1 : 0;
+          if (aStarts !== bStarts) return bStarts - aStarts;
+
+          const aIncludes = a.name.toLowerCase().includes(qLower) ? 1 : 0;
+          const bIncludes = b.name.toLowerCase().includes(qLower) ? 1 : 0;
+          return bIncludes - aIncludes;
+        })
         .slice(0, 5)
     : [];
 

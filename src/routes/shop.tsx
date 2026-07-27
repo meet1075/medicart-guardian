@@ -56,6 +56,20 @@ function ShopPage() {
       case "price-desc":
         list.sort((a, b) => b.mrp - a.mrp);
         break;
+      case "popular":
+        if (query) {
+          const nq = query.toLowerCase();
+          list.sort((a, b) => {
+            const aStarts = a.name.toLowerCase().startsWith(nq) ? 1 : 0;
+            const bStarts = b.name.toLowerCase().startsWith(nq) ? 1 : 0;
+            if (aStarts !== bStarts) return bStarts - aStarts;
+
+            const aIncludes = a.name.toLowerCase().includes(nq) ? 1 : 0;
+            const bIncludes = b.name.toLowerCase().includes(nq) ? 1 : 0;
+            return bIncludes - aIncludes;
+          });
+        }
+        break;
     }
     return list;
   }, [rxFilter, query, maxPrice, sortBy, medicines]);
