@@ -140,15 +140,19 @@ export const createOrderFn = createServerFn({ method: "POST" })
       const medicineIds = data.items.map(i => i.medicineId);
       const dbMedicines = await db.medicine.findMany({
         where: { id: { in: medicineIds } },
-        select: { id: true, mrp: true, prescriptionRequired: true, inStock: true },
+        // @ts-ignore - bypass IDE cache if Prisma client hasn't updated locally
+        select: { id: true, mrp: true, prescriptionRequired: true, inStock: true, moq: true },
       });
       const priceMap = new Map(dbMedicines.map(m => [m.id, m]));
 
-      // Validate each item's price and availability
+      // Validate each item's price, availability, and MOQ
       for (const item of data.items) {
         const dbMed = priceMap.get(item.medicineId);
         if (!dbMed) return errorResponse("Invalid medicine in cart", undefined, 400);
         if (!dbMed.inStock) return errorResponse(`${item.name} is out of stock`, undefined, 400);
+        
+        const moq = (dbMed as any).moq || 1;
+        if (item.qty < moq) return errorResponse(`${item.name} requires a minimum order quantity of ${moq}`, undefined, 400);
         // Allow ±1 rupee tolerance for rounding differences
         if (Math.abs(dbMed.mrp - item.price) > 1) {
           return errorResponse(`Price mismatch for ${item.name}. Please refresh your cart.`, undefined, 400);
