@@ -64,6 +64,12 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         },
     },
+    account: {
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ["google"],
+        },
+    },
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: getBaseUrl(),
     // Allow requests from any Vercel preview/production deployment
