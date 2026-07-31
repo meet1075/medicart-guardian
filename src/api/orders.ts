@@ -92,6 +92,7 @@ const CreateOrderSchema = z.object({
   paymentMethod: z.string(),
   address: z.object({
     fullName: z.string(),
+    email: z.string().optional(),
     phone: z.string(),
     line1: z.string(),
     line2: z.string().optional(),
@@ -120,6 +121,19 @@ export const createOrderFn = createServerFn({ method: "POST" })
     try {
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in to place an order", 401);
+
+      const user = await db.user.findUnique({ where: { id: session.id } });
+      if (user) {
+        let updateData: any = {};
+        if (!user.name && data.address.fullName) updateData.name = data.address.fullName;
+        if (!user.email && data.address.email) {
+          updateData.email = data.address.email;
+          updateData.emailVerified = false;
+        }
+        if (Object.keys(updateData).length > 0) {
+          await db.user.update({ where: { id: user.id }, data: updateData });
+        }
+      }
 
       // --- Server-side price verification ---
       // Re-fetch prices from DB to prevent client-side price manipulation

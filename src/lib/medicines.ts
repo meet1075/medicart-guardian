@@ -10,6 +10,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 15 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "azithral-500",
@@ -20,6 +21,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 5 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: true,
+    moq: 1,
   },
   {
     id: "metformin-500",
@@ -30,6 +32,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 20 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: true,
+    moq: 1,
   },
   {
     id: "telma-40",
@@ -40,6 +43,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 15 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: true,
+    moq: 1,
   },
   {
     id: "atorva-10",
@@ -50,6 +54,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 15 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: true,
+    moq: 1,
   },
   {
     id: "cetzine",
@@ -60,6 +65,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 10 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "vicks-vaporub",
@@ -70,6 +76,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "50g jar",
     dosageForm: "Topical Ointment",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "shelcal-500",
@@ -80,6 +87,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 15 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "revital-h",
@@ -90,6 +98,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Bottle of 30 capsules",
     dosageForm: "Capsule",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "cetaphil-cleanser",
@@ -100,6 +109,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "250ml bottle",
     dosageForm: "Liquid Cleanser",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "himalaya-baby-lotion",
@@ -110,6 +120,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "200ml bottle",
     dosageForm: "Lotion",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "bp-monitor",
@@ -120,6 +131,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "1 device with cuff",
     dosageForm: "Device",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "glucometer",
@@ -130,6 +142,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "1 meter + 10 strips",
     dosageForm: "Device",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "pan-40",
@@ -140,6 +153,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 15 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: true,
+    moq: 1,
   },
   {
     id: "crocin-cold-flu",
@@ -150,6 +164,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "Strip of 10 tablets",
     dosageForm: "Tablet",
     prescriptionRequired: false,
+    moq: 1,
   },
   {
     id: "moov-cream",
@@ -160,6 +175,7 @@ export const MEDICINES: Medicine[] = [
     packSize: "50g tube",
     dosageForm: "Topical Cream",
     prescriptionRequired: false,
+    moq: 1,
   },
 ];
 

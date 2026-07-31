@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CheckoutFrame } from "@/components/CheckoutFrame";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import type { Address } from "@/lib/types";
 import { z } from "zod";
@@ -10,6 +11,7 @@ const PENDING_ADDRESS = "medicart.pending-address.v1";
 
 const addressSchema = z.object({
   fullName: z.string().trim().min(2, "Enter your full name").max(20, "Full name must be at most 20 characters"),
+  email: z.string().email("Enter a valid email address").optional().or(z.literal("")),
   phone: z.string().trim().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   line1: z.string().trim().min(3, "Address line 1 is required").max(120),
   line2: z.string().trim().max(120).optional(),
@@ -29,11 +31,13 @@ export const Route = createFileRoute("/checkout/address")({
 });
 
 function AddressStep() {
+  const { user } = useAuth();
   const { cart, savedAddresses, saveAddress } = useStore();
   const navigate = useNavigate();
   const [values, setValues] = useState<Address & { save?: boolean }>(() => {
     const base = {
       fullName: "",
+      email: "",
       phone: "",
       line1: "",
       line2: "",
@@ -75,6 +79,14 @@ function AddressStep() {
       toast.error("Please fix the highlighted fields");
       return;
     }
+    
+    const hasValidEmail = user?.email && !user.email.endsWith('@medicart.local');
+    if (!hasValidEmail && !parsed.data.email) {
+      setErrors({ email: "Email is required since it's missing from your profile" });
+      toast.error("Please provide an email address");
+      return;
+    }
+
     setErrors({});
     const { save, ...address } = parsed.data;
     if (save) saveAddress(address);
@@ -114,6 +126,15 @@ function AddressStep() {
               onChange={(e) => update("fullName", e.target.value)}
               className={inputClass(!!errors.fullName)}
               maxLength={20}
+            />
+          </Field>
+          <Field label={`Email ${user?.email && !user.email.endsWith('@medicart.local') ? "(from profile)" : "*"}`} error={errors.email}>
+            <input
+              type="email"
+              disabled={!!(user?.email && !user.email.endsWith('@medicart.local'))}
+              value={(user?.email && !user.email.endsWith('@medicart.local')) ? user.email : (values as any).email || ""}
+              onChange={(e) => update("email" as any, e.target.value)}
+              className={inputClass(!!errors.email) + ((user?.email && !user.email.endsWith('@medicart.local')) ? " opacity-50 cursor-not-allowed" : "")}
             />
           </Field>
           <Field label="Phone" error={errors.phone}>

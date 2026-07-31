@@ -3,7 +3,8 @@ import { PublicLayout } from "@/components/PublicLayout";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { toast } from "sonner";
-import { HeartPulse, Mail, Lock } from "lucide-react";
+import { HeartPulse, Phone, KeyRound, User, Mail } from "lucide-react";
+import { updateProfileFn } from "@/api/users";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -16,21 +17,69 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { login, isLoggingIn, loginWithGoogle } = useAuth();
+  const { sendOtp, isSendingOtp, verifyOtp, isVerifyingOtp, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
   const redirectUrl = redirect || "/";
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
+    if (!phone) return toast.error("Please enter a valid phone number");
     try {
-      await login({ email, password });
-      toast.success("Welcome back!");
-      navigate({ to: redirectUrl });
+      await sendOtp(phone);
+      toast.success("OTP sent to your phone");
+      setStep(2);
     } catch (error: any) {
-      toast.error(error.message || "Failed to login");
+      toast.error(error.message || "Failed to send OTP");
+    }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!otp || otp.length < 4) return toast.error("Please enter a valid OTP");
+    try {
+      const data = await verifyOtp(phone, otp);
+      
+      const isDummyProfile = 
+        data?.user?.email?.includes("@medicart.local") || 
+        data?.user?.name?.startsWith("User ");
+        
+      if (isDummyProfile) {
+        toast.success("Phone verified. Please complete your profile.");
+        setStep(3);
+      } else {
+        toast.success("Successfully verified!");
+        navigate({ to: redirectUrl });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Invalid OTP");
+    }
+  }
+
+  async function handleUpdateProfile(e: React.FormEvent) {
+    e.preventDefault();
+    if (name.length < 2) return toast.error("Please enter a valid name");
+    if (!email.includes("@")) return toast.error("Please enter a valid email");
+    
+    setIsUpdating(true);
+    try {
+      const res = await updateProfileFn({ data: { name, email } });
+      if (res.status === "success") {
+        toast.success("Profile updated successfully!");
+        window.location.href = redirectUrl;
+      } else {
+        toast.error(res.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsUpdating(false);
     }
   }
 
@@ -48,47 +97,113 @@ function LoginPage() {
             Log in to manage your orders and prescriptions.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Email Address
-              </label>
-              <div className="relative mt-2">
-                <Mail size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary"
-                  placeholder="you@example.com"
-                />
+          {step === 1 && (
+            <form onSubmit={handleSendOtp} className="mt-8 space-y-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Phone Number
+                </label>
+                <div className="relative mt-2">
+                  <Phone size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary"
+                    placeholder="10-digit mobile number"
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <label>Password</label>
+              <button
+                type="submit"
+                disabled={isSendingOtp}
+                className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isSendingOtp ? "Sending OTP..." : "Continue with Phone"}
+              </button>
+            </form>
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp} className="mt-8 space-y-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Enter OTP sent to {phone}
+                </label>
+                <div className="relative mt-2">
+                  <KeyRound size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <input
+                    type="text"
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm tracking-widest outline-none focus:border-primary"
+                    placeholder="123456"
+                    maxLength={6}
+                  />
+                </div>
               </div>
-              <div className="relative mt-2">
-                <Lock size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary"
-                  placeholder="••••••••"
-                />
+              <button
+                type="submit"
+                disabled={isVerifyingOtp}
+                className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isVerifyingOtp ? "Verifying..." : "Verify & Log in"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="mt-2 w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Change phone number
+              </button>
+            </form>
+          )}
+
+          {step === 3 && (
+            <form onSubmit={handleUpdateProfile} className="mt-8 space-y-4">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Full Name
+                </label>
+                <div className="relative mt-2">
+                  <User size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary"
+                    placeholder="John Doe"
+                  />
+                </div>
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {isLoggingIn ? "Logging in..." : "Log in"}
-            </button>
-          </form>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Email Address
+                </label>
+                <div className="relative mt-2">
+                  <Mail size={16} className="absolute left-3 top-3 text-muted-foreground" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary"
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isUpdating}
+                className="mt-4 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isUpdating ? "Saving..." : "Complete Profile"}
+              </button>
+            </form>
+          )}
 
           <div className="relative mt-6">
             <div className="absolute inset-0 flex items-center">
@@ -120,10 +235,10 @@ function LoginPage() {
           </button>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/register" search={{ redirect: redirectUrl }} className="font-semibold text-primary hover:underline">
-              Sign up
-            </Link>
+            Having trouble?{" "}
+            <a href="mailto:support@obatmedicare.com" className="font-semibold text-primary hover:underline">
+              Contact Support
+            </a>
           </p>
         </div>
       </div>

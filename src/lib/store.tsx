@@ -134,32 +134,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const addToCart = useCallback((medicine: any, qty = 1) => {
+  const addToCart = useCallback((medicine: any, requestedQty = 1) => {
     setCart((prev) => {
+      const moq = medicine.moq || 1;
       const existing = prev.find((c) => c.medicineId === medicine.id);
       if (existing) {
         return prev.map((c) =>
-          c.medicineId === medicine.id ? { ...c, qty: c.qty + qty } : c,
+          c.medicineId === medicine.id ? { ...c, qty: c.qty + requestedQty } : c,
         );
       }
+      
+      // If it's a new item, ensure the initial quantity is at least the MOQ
+      const initialQty = Math.max(requestedQty, moq);
+
       return [...prev, { 
         medicineId: medicine.id, 
-        qty, 
+        qty: initialQty, 
         name: medicine.name, 
         salt: medicine.salt, 
         mrp: medicine.mrp, 
         dosageForm: medicine.dosageForm, 
-        prescriptionRequired: medicine.prescriptionRequired 
+        prescriptionRequired: medicine.prescriptionRequired,
+        moq: moq
       }];
     });
   }, []);
 
   const updateQty = useCallback((medicineId: string, qty: number) => {
-    setCart((prev) =>
-      qty <= 0
+    setCart((prev) => {
+      const existing = prev.find((c) => c.medicineId === medicineId);
+      if (!existing) return prev;
+      
+      const moq = existing.moq || 1;
+      
+      // If the new quantity is less than MOQ (e.g. user clicked minus when qty == moq), 
+      // we remove the item by forcing qty to 0.
+      if (qty > 0 && qty < moq) {
+        return prev.filter((c) => c.medicineId !== medicineId);
+      }
+
+      return qty <= 0
         ? prev.filter((c) => c.medicineId !== medicineId)
-        : prev.map((c) => (c.medicineId === medicineId ? { ...c, qty } : c)),
-    );
+        : prev.map((c) => (c.medicineId === medicineId ? { ...c, qty } : c));
+    });
   }, []);
 
   const removeFromCart = useCallback((medicineId: string) => {

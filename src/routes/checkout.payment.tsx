@@ -197,13 +197,6 @@ function PaymentStep() {
             title="Pay Online Securely"
             subtitle="UPI, Cards, Netbanking via Razorpay"
           />
-          <PayOption
-            selected={method === "cod"}
-            onClick={() => setMethod("cod")}
-            icon={<Banknote size={20} />}
-            title="Cash on Delivery"
-            subtitle="Pay when your order arrives"
-          />
         </div>
 
         {address && (

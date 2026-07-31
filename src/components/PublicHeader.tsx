@@ -248,7 +248,7 @@ export function PublicHeader() {
                 Log in
               </Link>
               <Link
-                to="/register"
+                to="/login"
                 className="whitespace-nowrap rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:bg-foreground/90"
               >
                 Sign up
@@ -311,7 +311,7 @@ export function PublicHeader() {
                   Log in
                 </Link>
                 <Link
-                  to="/register"
+                  to="/login"
                   onClick={() => setMobileOpen(false)}
                   className="flex justify-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background"
                 >

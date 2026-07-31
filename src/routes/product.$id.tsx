@@ -98,6 +98,13 @@ function ProductPage() {
             <div className="mt-5 flex items-baseline gap-3">
               <span className="text-3xl font-bold text-foreground">₹{medicine.mrp}</span>
             </div>
+            {medicine.moq > 1 && (
+              <div className="mt-2 text-sm font-medium text-warning-foreground">
+                <span className="bg-warning/10 px-2 py-1 rounded-md">
+                  Minimum Order Quantity: {medicine.moq}
+                </span>
+              </div>
+            )}
             <p className="mt-1 text-xs text-muted-foreground">MRP incl. of all taxes · {medicine.packSize}</p>
 
             <div className="mt-6 flex gap-3">

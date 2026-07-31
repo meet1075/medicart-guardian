@@ -29,7 +29,14 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
             {medicine.name}
           </h3>
           <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{medicine.salt}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{medicine.packSize}</p>
+          <div className="mt-0.5 flex flex-wrap items-center justify-between gap-1">
+            <span className="text-xs text-muted-foreground">{medicine.packSize}</span>
+            {medicine.moq > 1 && (
+              <span className="text-[10px] font-medium text-warning-foreground bg-warning/10 px-1.5 py-0.5 rounded">
+                Min. Qty: {medicine.moq}
+              </span>
+            )}
+          </div>
         </Link>
       </div>
 

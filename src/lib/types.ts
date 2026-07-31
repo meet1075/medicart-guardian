@@ -23,6 +23,7 @@ export interface Medicine {
   packSize: string;
   dosageForm: string;
   prescriptionRequired: boolean;
+  moq: number;
   inStock?: boolean;
   imageUrl?: string | null;
 }
@@ -35,6 +36,7 @@ export interface CartItem {
   mrp?: number;
   dosageForm?: string;
   prescriptionRequired?: boolean;
+  moq?: number;
 }
 
 export interface PrescriptionExtraction {

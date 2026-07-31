@@ -4,36 +4,34 @@ import { useState } from "react";
 export function useAuth() {
   const { data: sessionData, isPending: isLoading, error: isError } = useSession();
   
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const login = async (data: { email: string; password: string }) => {
-    setIsLoggingIn(true);
+  const sendOtp = async (phoneNumber: string) => {
+    setIsSendingOtp(true);
     try {
-      const { data: result, error } = await authClient.signIn.email({
-        email: data.email,
-        password: data.password,
+      const { data, error } = await authClient.phoneNumber.sendOtp({
+        phoneNumber,
       });
-      if (error) throw new Error(error.message || "Login failed");
-      return result;
+      if (error) throw new Error(error.message || "Failed to send OTP");
+      return data;
     } finally {
-      setIsLoggingIn(false);
+      setIsSendingOtp(false);
     }
   };
 
-  const register = async (data: { name: string; email: string; password: string }) => {
-    setIsRegistering(true);
+  const verifyOtp = async (phoneNumber: string, code: string) => {
+    setIsVerifyingOtp(true);
     try {
-      const { data: result, error } = await authClient.signUp.email({
-        name: data.name,
-        email: data.email,
-        password: data.password,
+      const { data, error } = await authClient.phoneNumber.verify({
+        phoneNumber,
+        code,
       });
-      if (error) throw new Error(error.message || "Registration failed");
-      return result;
+      if (error) throw new Error(error.message || "Invalid OTP");
+      return data;
     } finally {
-      setIsRegistering(false);
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -61,12 +59,11 @@ export function useAuth() {
     user: (sessionData?.user as any) ?? null,
     isLoading,
     isError,
+    sendOtp,
+    isSendingOtp,
     
-    login,
-    isLoggingIn,
-    
-    register,
-    isRegistering,
+    verifyOtp,
+    isVerifyingOtp,
     
     logout,
     isLoggingOut,

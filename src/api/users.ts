@@ -51,6 +51,24 @@ export const updateUserRoleFn = createServerFn({ method: "POST" })
     }
   });
 
+export const updateProfileFn = createServerFn({ method: "POST" })
+  .validator(z.object({ name: z.string().min(2), email: z.string().email() }))
+  .handler(async ({ data }): Promise<ApiResponse> => {
+    try {
+      const session = await getUserSession();
+      if (!session) return errorResponse("Unauthorized", undefined, 401);
+
+      const user = await db.user.update({
+        where: { id: session.id },
+        data: { name: data.name, email: data.email },
+      });
+      return successResponse("Profile updated successfully", user);
+    } catch (error) {
+      console.error(error);
+      return errorResponse("Failed to update profile", (error as Error).message);
+    }
+  });
+
 export const getPastPrescriptionsFn = createServerFn({ method: "POST" })
   .validator(z.object({ medicineIds: z.array(z.string()) }))
   .handler(async ({ data }): Promise<ApiResponse> => {

@@ -9,15 +9,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  name          String
-  role          String    @default("USER")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  emailVerified Boolean   @default(false)
-  image         String?
+  id                  String    @id @default(cuid())
+  email               String?   @unique
+  name                String?
+  phoneNumber         String?   @unique
+  phoneNumberVerified Boolean   @default(false)
+  role                String    @default("USER")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  emailVerified       Boolean   @default(false)
+  image               String?
   accounts      Account[]
   addresses     Address[]
   orders        Order[]
@@ -36,6 +37,7 @@ model Medicine {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
   inStock              Boolean     @default(true)
+  moq                  Int         @default(1)
   imageUrl             String?
   orderItems           OrderItem[]
 }
