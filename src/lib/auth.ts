@@ -7,6 +7,10 @@ import { db } from "./db";
 // (not localhost), otherwise let better-auth derive it from the incoming request.
 // This prevents the OAuth state_mismatch when BETTER_AUTH_URL is set to localhost.
 const getBaseUrl = () => {
+  // If we are on Vercel, trust the VERCEL_URL (which maps to the exact preview/production domain)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
   const url = process.env.BETTER_AUTH_URL;
   if (url && !url.includes("localhost")) return url;
   return undefined; // better-auth derives from request origin
@@ -71,6 +75,7 @@ export const auth = betterAuth({
     // Allow requests from any Vercel preview/production deployment
     trustedOrigins: [
         "https://medicart-guardian.vercel.app",
+        "https://medicart-guardian-self.vercel.app",
         "http://localhost:8080",
         "http://localhost:3000",
     ],

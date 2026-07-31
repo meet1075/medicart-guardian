@@ -63,9 +63,12 @@ export const updateProfileFn = createServerFn({ method: "POST" })
         data: { name: data.name, email: data.email },
       });
       return successResponse("Profile updated successfully", user);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      return errorResponse("Failed to update profile", (error as Error).message);
+      if (error.code === "P2002") {
+        return errorResponse("This email is already in use by another account.");
+      }
+      return errorResponse("Failed to update profile", error.message);
     }
   });
 
