@@ -60,7 +60,7 @@ export const updateProfileFn = createServerFn({ method: "POST" })
 
       const user = await db.user.update({
         where: { id: session.id },
-        data: { name: data.name, email: data.email },
+        data: { name: data.name, email: data.email, emailVerified: true },
       });
       return successResponse("Profile updated successfully", user);
     } catch (error: any) {
