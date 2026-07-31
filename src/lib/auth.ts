@@ -3,17 +3,11 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { phoneNumber } from "better-auth/plugins";
 import { db } from "./db";
 
-// Derive base URL: prefer BETTER_AUTH_URL only if it's a real deployment URL
-// (not localhost), otherwise let better-auth derive it from the incoming request.
-// This prevents the OAuth state_mismatch when BETTER_AUTH_URL is set to localhost.
+// Derive base URL: Let better-auth derive it from the incoming request's Host header
+// so that it matches exactly whichever domain the user is currently visiting 
+// (e.g. -self vs main vs localhost).
 const getBaseUrl = () => {
-  // If we are on Vercel, trust the VERCEL_URL (which maps to the exact preview/production domain)
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  const url = process.env.BETTER_AUTH_URL;
-  if (url && !url.includes("localhost")) return url;
-  return undefined; // better-auth derives from request origin
+  return undefined; 
 };
 
 export const auth = betterAuth({
