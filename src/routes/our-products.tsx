@@ -11,11 +11,18 @@ import {
   ShoppingBag,
   Phone,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { z } from "zod";
 
 import { getSeoMeta } from "@/lib/seo";
+import { useMedicines } from "@/hooks/use-medicines";
+
+const searchSchema = z.object({
+  category: z.enum(["dermatology", "general", "gastro", "ortho", "cardiac", "gynae"]).optional(),
+});
 
 export const Route = createFileRoute("/our-products")({
+  validateSearch: (s) => searchSchema.parse(s),
   head: () => {
     const seo = getSeoMeta({
       title: "Our Products — Obat Medicare | MediCart",
@@ -30,102 +37,29 @@ export const Route = createFileRoute("/our-products")({
   component: OurProductsPage,
 });
 
+
+
 // ── Product Data ──────────────────────────────────────────────────────────────
 type Category =
   | "dermatology"
   | "general"
   | "gastro"
   | "ortho"
-  | "cardiac";
-
-interface Product {
-  name: string;
-  category: Category;
-  form: string;
-  description: string;
-}
-
-const PRODUCTS: Product[] = [
-  // Dermatology
-  { name: "BYVIGO Cream", category: "dermatology", form: "Cream", description: "Advanced topical formulation for skin conditions." },
-  { name: "BRIGHTEN UP", category: "dermatology", form: "Serum", description: "Brightening and depigmentation skincare solution." },
-  { name: "BYESCAB", category: "dermatology", form: "Lotion", description: "Anti-scabies treatment lotion." },
-  { name: "BYEZBAC Face Wash", category: "dermatology", form: "Face Wash", description: "Antibacterial face wash for acne-prone skin." },
-  { name: "BYEZBAC Lotion", category: "dermatology", form: "Lotion", description: "Antibacterial body lotion." },
-  { name: "BYEZBAC Ointment", category: "dermatology", form: "Ointment", description: "Topical antibacterial ointment." },
-  { name: "OBATDERM Cream", category: "dermatology", form: "Cream", description: "Multi-action dermatology cream." },
-  { name: "KETOMAX Shampoo", category: "dermatology", form: "Shampoo", description: "Anti-dandruff medicated shampoo." },
-  { name: "CLOTRIZOLE Cream", category: "dermatology", form: "Cream", description: "Antifungal topical cream." },
-  { name: "TACRO-0.03 Ointment", category: "dermatology", form: "Ointment", description: "Immunomodulator for eczema." },
-  { name: "CALAMINE Plus Lotion", category: "dermatology", form: "Lotion", description: "Calamine-based soothing lotion." },
-  { name: "SALICYL-6 Gel", category: "dermatology", form: "Gel", description: "Salicylic acid gel for psoriasis and acne." },
-  { name: "TRETINOIN 0.025% Cream", category: "dermatology", form: "Cream", description: "Retinoid cream for anti-aging and acne." },
-  { name: "DERMOCORT Cream", category: "dermatology", form: "Cream", description: "Corticosteroid cream for inflammatory skin disorders." },
-  // General Medicine
-  { name: "AMOXYCILLIN 500", category: "general", form: "Capsule", description: "Broad-spectrum penicillin antibiotic." },
-  { name: "AZITHROMYCIN 250", category: "general", form: "Tablet", description: "Macrolide antibiotic for respiratory infections." },
-  { name: "CETIRIZINE 10", category: "general", form: "Tablet", description: "Antihistamine for allergy relief." },
-  { name: "PARACETAMOL 650", category: "general", form: "Tablet", description: "Analgesic and antipyretic." },
-  { name: "IBUPROFEN 400", category: "general", form: "Tablet", description: "NSAID for pain and inflammation." },
-  { name: "DEXTROMETHORPHAN Syrup", category: "general", form: "Syrup", description: "Cough suppressant syrup." },
-  { name: "MONTELUKAST 10", category: "general", form: "Tablet", description: "Leukotriene antagonist for asthma." },
-  { name: "ONDANSETRON 4", category: "general", form: "Tablet", description: "Antiemetic for nausea and vomiting." },
-  // Gastroenterology
-  { name: "RABEPRAZOLE 20", category: "gastro", form: "Tablet", description: "Proton pump inhibitor for acid reflux and ulcers." },
-  { name: "PANTOPRAZOLE 40", category: "gastro", form: "Tablet", description: "PPI for GERD and peptic ulcer." },
-  // Orthopaedics
-  { name: "DICLOFENAC GEL 1%", category: "ortho", form: "Gel", description: "Topical NSAID for joint and muscle pain." },
-  { name: "METHYL SALICYLATE Cream", category: "ortho", form: "Cream", description: "Topical analgesic for musculoskeletal pain." },
-  // Cardiac-Diabetic
-  { name: "ATORVASTATIN 10", category: "cardiac", form: "Tablet", description: "Statin for lowering cholesterol." },
-  { name: "TELMISARTAN 40", category: "cardiac", form: "Tablet", description: "ARB for hypertension management." },
-  { name: "AMLODIPINE 5", category: "cardiac", form: "Tablet", description: "Calcium channel blocker for blood pressure." },
-  { name: "METOPROLOL 25", category: "cardiac", form: "Tablet", description: "Beta-blocker for cardiac conditions." },
-  { name: "GLIMEPIRIDE 1", category: "cardiac", form: "Tablet", description: "Sulfonylurea for type 2 diabetes." },
-  { name: "METFORMIN 500", category: "cardiac", form: "Tablet", description: "Biguanide for blood glucose control." },
-  { name: "SITAGLIPTIN 100", category: "cardiac", form: "Tablet", description: "DPP-4 inhibitor for type 2 diabetes." },
-  { name: "ASPIRIN 75", category: "cardiac", form: "Tablet", description: "Antiplatelet for cardiovascular prevention." },
-  { name: "CLOPIDOGREL 75", category: "cardiac", form: "Tablet", description: "Antiplatelet agent." },
-  { name: "RAMIPRIL 5", category: "cardiac", form: "Tablet", description: "ACE inhibitor for heart failure and hypertension." },
-];
+  | "cardiac"
+  | "gynae";
 
 const CATEGORIES: {
   id: Category | "all";
   label: string;
   icon: React.ElementType;
-  count: number;
 }[] = [
-  { id: "all", label: "All Products", icon: FlaskConical, count: PRODUCTS.length },
-  {
-    id: "dermatology",
-    label: "Dermatology",
-    icon: Heart,
-    count: PRODUCTS.filter((p) => p.category === "dermatology").length,
-  },
-  {
-    id: "general",
-    label: "General Medicine",
-    icon: Pill,
-    count: PRODUCTS.filter((p) => p.category === "general").length,
-  },
-  {
-    id: "gastro",
-    label: "Gastroenterology",
-    icon: Activity,
-    count: PRODUCTS.filter((p) => p.category === "gastro").length,
-  },
-  {
-    id: "ortho",
-    label: "Orthopaedics",
-    icon: Bone,
-    count: PRODUCTS.filter((p) => p.category === "ortho").length,
-  },
-  {
-    id: "cardiac",
-    label: "Cardiac-Diabetic",
-    icon: Stethoscope,
-    count: PRODUCTS.filter((p) => p.category === "cardiac").length,
-  },
+  { id: "all", label: "All Products", icon: FlaskConical },
+  { id: "dermatology", label: "Dermatology", icon: Heart },
+  { id: "general", label: "General Medicine", icon: Pill },
+  { id: "gastro", label: "Gastroenterology", icon: Activity },
+  { id: "ortho", label: "Orthopaedics", icon: Bone },
+  { id: "cardiac", label: "Cardiac-Diabetic", icon: Stethoscope },
+  { id: "gynae", label: "Gynaecology", icon: Activity },
 ];
 
 const CATEGORY_COLORS: Record<Category, { bg: string; text: string }> = {
@@ -134,15 +68,26 @@ const CATEGORY_COLORS: Record<Category, { bg: string; text: string }> = {
   gastro: { bg: "bg-success/10", text: "text-success" },
   ortho: { bg: "bg-info/10", text: "text-info" },
   cardiac: { bg: "bg-destructive/10", text: "text-destructive" },
+  gynae: { bg: "bg-pink-500/10", text: "text-pink-600" },
 };
 
 function OurProductsPage() {
-  const [active, setActive] = useState<Category | "all">("all");
+  const { category: queryCategory } = Route.useSearch();
+  const { medicines, isLoading } = useMedicines();
+  const [active, setActive] = useState<Category | "all">(queryCategory || "all");
+
+  useEffect(() => {
+    if (queryCategory) {
+      setActive(queryCategory);
+    } else {
+      setActive("all");
+    }
+  }, [queryCategory]);
 
   const filtered =
     active === "all"
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === active);
+      ? medicines
+      : medicines.filter((p) => (p.category || "general").split(",").includes(active));
 
   return (
     <PublicLayout>
@@ -165,7 +110,7 @@ function OurProductsPage() {
             Our Products
           </h1>
           <p className="mt-4 mx-auto max-w-xl text-base text-white/80">
-            {PRODUCTS.length}+ pharmaceutical formulations across dermatology,
+            {medicines.length}+ pharmaceutical formulations across dermatology,
             general medicine, cardiac care, and more.
           </p>
         </div>
@@ -173,16 +118,17 @@ function OurProductsPage() {
 
       {/* ── Category Tabs ── */}
       <section className="sticky top-[64px] z-20 border-b border-border bg-surface shadow-sm">
-        <div className="container-page">
-          <div className="flex gap-0 overflow-x-auto">
+        <div className="w-full px-2 md:px-6 lg:px-8 mx-auto max-w-[1920px]">
+          <div className="flex items-center justify-center gap-x-1 md:gap-x-4 overflow-x-auto scrollbar-hide">
             {CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isActive = active === cat.id;
+              const count = cat.id === "all" ? medicines.length : medicines.filter((m) => (m.category || "general").split(",").includes(cat.id)).length;
               return (
-                <button
+                <Link
                   key={cat.id}
-                  type="button"
-                  onClick={() => setActive(cat.id as Category | "all")}
+                  to="/our-products"
+                  search={{ category: cat.id === "all" ? undefined : cat.id }}
                   className={`flex shrink-0 items-center gap-2 border-b-2 px-4 py-4 text-xs font-semibold uppercase tracking-wider transition-colors ${
                     isActive
                       ? "border-primary text-primary"
@@ -198,9 +144,9 @@ function OurProductsPage() {
                         : "bg-surface-muted text-muted-foreground"
                     }`}
                   >
-                    {cat.count}
+                    {count}
                   </span>
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -223,53 +169,9 @@ function OurProductsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((product) => {
-            const colors = CATEGORY_COLORS[product.category];
-            return (
-              <div
-                key={`${product.name}-${product.category}`}
-                className="group flex flex-col rounded-xl border border-border bg-surface p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-              >
-                {/* Category pill */}
-                <span
-                  className={`self-start rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${colors.bg} ${colors.text}`}
-                >
-                  {product.category === "gastro"
-                    ? "Gastroenterology"
-                    : product.category === "ortho"
-                    ? "Orthopaedics"
-                    : product.category === "cardiac"
-                    ? "Cardiac-Diabetic"
-                    : product.category.charAt(0).toUpperCase() +
-                      product.category.slice(1)}
-                </span>
-
-                {/* Icon */}
-                <div className="mt-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                  <FlaskConical size={22} />
-                </div>
-
-                <h3 className="mt-4 font-bold text-foreground leading-snug">
-                  {product.name}
-                </h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {product.form}
-                </p>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground flex-1">
-                  {product.description}
-                </p>
-
-                <div className="mt-4 border-t border-border pt-3">
-                  <a
-                    href={`tel:+919650506996`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
-                  >
-                    <Phone size={11} /> Enquire
-                  </a>
-                </div>
-              </div>
-            );
-          })}
+          {filtered.map((product) => (
+            <ProductFlipCard key={`${product.name}-${product.category || "general"}`} product={product} />
+          ))}
         </div>
       </section>
 
@@ -310,4 +212,107 @@ function OurProductsPage() {
       </section>
     </PublicLayout>
   );
+}
+
+function ProductFlipCard({ product }: { product: any }) {
+  const [flipped, setFlipped] = useState(false);
+  
+  const cats = (product.category || "general").split(",");
+  
+  const getCategoryName = (cat: string) => {
+    return cat === "gastro"
+      ? "Gastroenterology"
+      : cat === "ortho"
+      ? "Orthopaedics"
+      : cat === "cardiac"
+      ? "Cardiac-Diabetic"
+      : cat === "gynae"
+      ? "Gynaecology"
+      : cat.charAt(0).toUpperCase() + cat.slice(1);
+  };
+
+  return (
+    <div 
+      className="group relative h-[340px] w-full cursor-pointer" 
+      style={{ perspective: "1000px" }}
+      onClick={() => setFlipped(!flipped)}
+    >
+      <div 
+        className="relative h-full w-full rounded-xl transition-all duration-500"
+        style={{ 
+          transformStyle: "preserve-3d",
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)"
+        }}
+      >
+        {/* Front */}
+        <div 
+          className="absolute inset-0 flex flex-col rounded-xl border border-border bg-surface p-5 shadow-sm hover:border-primary/30 hover:shadow-md"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+           <div className="flex flex-wrap gap-1 mb-2">
+             {cats.map((c: string) => {
+               const colors = CATEGORY_COLORS[c as Category] || CATEGORY_COLORS.general;
+               return (
+                 <span key={c} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${colors.bg} ${colors.text}`}>
+                   {getCategoryName(c)}
+                 </span>
+               );
+             })}
+           </div>
+           {product.imageUrl ? (
+              <div className="mt-4 flex h-32 w-full items-center justify-center rounded-xl bg-surface-muted overflow-hidden">
+                <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover mix-blend-multiply" />
+              </div>
+            ) : (
+              <div className="mt-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <FlaskConical size={22} />
+              </div>
+            )}
+            <h3 className="mt-4 font-bold text-foreground leading-snug">
+              {product.name}
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {product.dosageForm}
+            </p>
+            <div className="mt-auto pt-3 border-t border-border text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex justify-between items-center opacity-70 group-hover:opacity-100 transition-opacity">
+               <span>Tap to view ingredients</span>
+               <ArrowRight size={12} />
+            </div>
+        </div>
+
+        {/* Back */}
+        <div 
+          className="absolute inset-0 flex flex-col rounded-xl border border-primary bg-primary p-6 shadow-lg text-primary-foreground overflow-y-auto"
+          style={{ 
+            backfaceVisibility: "hidden", 
+            transform: "rotateY(180deg)" 
+          }}
+        >
+          <div className="flex flex-col h-full">
+            <div className="mb-4 flex flex-wrap gap-1">
+              {cats.map((c: string) => (
+                <span key={c} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-white/20 text-white`}>
+                 {getCategoryName(c)}
+                </span>
+              ))}
+            </div>
+            
+            <h3 className="font-bold text-xl mb-1">{product.name}</h3>
+            <p className="text-primary-foreground/70 text-xs mb-4 font-medium uppercase tracking-wider">Obat Medicare</p>
+            
+            <div className="text-xs font-bold text-primary-foreground/90 uppercase tracking-wide mb-2 border-b border-primary-foreground/20 pb-1">
+              Active Ingredients
+            </div>
+            <p className="text-sm leading-relaxed">
+              {product.salt}
+            </p>
+
+            <div className="mt-auto pt-4 text-[10px] uppercase font-bold tracking-wider text-primary-foreground/70 text-center opacity-70 hover:opacity-100 transition-opacity">
+               Tap to flip back
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

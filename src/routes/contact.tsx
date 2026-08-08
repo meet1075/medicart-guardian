@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { sendContactEmailFn } from "@/api/contact";
 
 import { getSeoMeta } from "@/lib/seo";
 
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/contact")({
   head: () => {
     const seo = getSeoMeta({
       title: "Contact Us — Obat Medicare | MediCart",
-      description: "Get in touch with Obat Medicare. Reach us at our Mumbai or Patna offices, call +91-9650506996, or email obatmedicare@gmail.com.",
+      description: "Get in touch with Obat Medicare. Reach us at our Mumbai office, call +91-9650506996, or email obatmedicare@gmail.com.",
       path: "/contact",
     });
     return {
@@ -43,19 +44,6 @@ const OFFICES = [
     icon: Building2,
     accent: "text-primary",
     accentBg: "bg-primary/10",
-  },
-  {
-    city: "Patna",
-    label: "Regional Office",
-    address: [
-      "House of Ajay Kumar Tiwari,",
-      "Road No 9, Near Chandak Bhawan,",
-      "Rajendra Nagar, Patna – 800016",
-      "Bihar, India",
-    ],
-    icon: MapPin,
-    accent: "text-success",
-    accentBg: "bg-success/10",
   },
 ];
 
@@ -108,20 +96,24 @@ function ContactPage() {
     setForm((p) => ({ ...p, [k]: v }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       toast.error("Please fill in all required fields.");
       return;
     }
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
+    try {
+      await sendContactEmailFn({ data: form });
       setForm({ name: "", email: "", phone: "", company: "", message: "" });
       toast.success(
-        "Message sent! Our team will get back to you within 1 business day."
+        "Message sent! We have received your inquiry and will contact you soon."
       );
-    }, 900);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send message.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -134,13 +126,13 @@ function ContactPage() {
             "@type": "LocalBusiness",
             name: "Obat Medicare Pvt Ltd",
             image: "https://obatmedicare.com/favicon.ico",
-            description: "Reach us at our Mumbai or Patna offices.",
+            description: "Reach us at our Mumbai office.",
             url: "https://obatmedicare.com/contact",
             telephone: "+91-9650506996",
             email: "obatmedicare@gmail.com",
             address: {
               "@type": "PostalAddress",
-              streetAddress: "MUMBAI & PATNA",
+              streetAddress: "MUMBAI",
               addressCountry: "IN"
             },
             openingHours: "Mo-Sa 09:00-18:00"

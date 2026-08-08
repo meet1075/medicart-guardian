@@ -212,6 +212,7 @@ function MedicineEditorModal({
     mrp: medicine?.mrp || 0,
     packSize: medicine?.packSize || "",
     dosageForm: medicine?.dosageForm || "",
+    category: (medicine as any)?.category || "general",
     prescriptionRequired: medicine?.prescriptionRequired ?? true,
     inStock: medicine?.inStock ?? true,
     imageUrl: (medicine as any)?.imageUrl || null as string | null,
@@ -419,6 +420,26 @@ function MedicineEditorModal({
                 placeholder="e.g. Tablet, Syrup"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Category
+              </label>
+              <select
+                name="category"
+                value={(formData as any).category || "general"}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              >
+                <option value="general">General Medicine</option>
+                <option value="dermatology">Dermatology</option>
+                <option value="cardiac">Cardiac-Diabetic</option>
+                <option value="ortho">Orthopaedics</option>
+                <option value="gastro">Gastroenterology</option>
+                <option value="gynae">Gynaecology</option>
+              </select>
             </div>
 
             {/* MRP */}

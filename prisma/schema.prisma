@@ -38,6 +38,7 @@ model Medicine {
   updatedAt            DateTime    @updatedAt
   inStock              Boolean     @default(true)
   moq                  Int         @default(1)
+  category             String      @default("general")
   imageUrl             String?
   orderItems           OrderItem[]
 }

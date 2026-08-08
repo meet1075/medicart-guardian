@@ -40,8 +40,8 @@ export function PublicFooter() {
           <p className="mt-4 text-sm text-muted-foreground">
             Obat Medicare Pvt Ltd is a fast-growing Indian pharmaceutical
             company offering a broad array of medicines and personal care
-            products. With bases in Patna and Mumbai, distributing via online
-            pharmacies and regional offices.
+            products. With our base in Mumbai, distributing via online
+            pharmacies.
           </p>
           <div className="mt-4 flex gap-3">
             <a
@@ -74,18 +74,19 @@ export function PublicFooter() {
             <li>
               <Link
                 to="/our-products"
+                search={{ category: "general" }}
                 className="hover:text-primary"
               >
                 General Medicine
               </Link>
             </li>
             <li>
-              <Link to="/our-products" className="hover:text-primary">
+              <Link to="/our-products" search={{ category: "dermatology" }} className="hover:text-primary">
                 Dermatology
               </Link>
             </li>
             <li>
-              <Link to="/our-products" className="hover:text-primary">
+              <Link to="/our-products" search={{ category: "cardiac" }} className="hover:text-primary">
                 Cardiac-Diabetic
               </Link>
             </li>
@@ -137,14 +138,7 @@ export function PublicFooter() {
                 Andheri, Mumbai – 400056
               </span>
             </li>
-            <li className="flex items-start gap-2">
-              <MapPin size={14} className="mt-0.5 shrink-0 text-primary" />
-              <span>
-                Rajendra Nagar,
-                <br />
-                Patna – 800016, Bihar
-              </span>
-            </li>
+
             <li className="flex items-center gap-2">
               <Phone size={14} className="shrink-0 text-primary" />
               <a href="tel:+919650506996" className="hover:text-primary">

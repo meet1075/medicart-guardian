@@ -92,10 +92,10 @@ function LandingPage() {
 
             <div className="mt-10 animate-in fade-in slide-in-from-bottom-7 duration-700 delay-500 flex flex-wrap items-center gap-4">
               <Link
-                to="/our-products"
+                to="/about"
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/40"
               >
-                Explore Formulations <ArrowRight size={16} />
+                Know More About Us <ArrowRight size={16} />
               </Link>
               <Link
                 to="/shop"
@@ -253,19 +253,22 @@ function LandingPage() {
             </Link>
           </div>
 
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-6">
+          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-6">
             {[
-              { id: "dermatology", icon: Heart, label: "Dermatology", count: 61 },
-              { id: "general", icon: Pill, label: "General Medicine", count: 22 },
-              { id: "cardiac", icon: Stethoscope, label: "Cardiac-Diabetic", count: 11 },
-              { id: "gastro", icon: Activity, label: "Gastroenterology", count: 1 },
-              { id: "ortho", icon: Bone, label: "Orthopaedics", count: 1 },
+              { id: "dermatology", icon: Heart, label: "Dermatology" },
+              { id: "general", icon: Pill, label: "General Medicine" },
+              { id: "cardiac", icon: Stethoscope, label: "Cardiac-Diabetic" },
+              { id: "gastro", icon: Activity, label: "Gastroenterology" },
+              { id: "ortho", icon: Bone, label: "Orthopaedics" },
+              { id: "gynae", icon: Activity, label: "Gynaecology" },
             ].map((cat) => {
               const Icon = cat.icon;
+              const count = medicines.filter(m => (m.category || "general").split(",").includes(cat.id)).length;
               return (
                 <Link
                   key={cat.id}
                   to="/our-products"
+                  search={{ category: cat.id as any }}
                   className="group relative flex flex-col items-center overflow-hidden rounded-2xl border border-border bg-surface p-6 text-center transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -276,7 +279,7 @@ function LandingPage() {
                     {cat.label}
                   </div>
                   <div className="relative z-10 mt-1 text-xs font-medium text-muted-foreground">
-                    {cat.count} Products
+                    {count} Products
                   </div>
                 </Link>
               );

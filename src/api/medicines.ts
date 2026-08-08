@@ -42,6 +42,7 @@ const MedicineSchema = z.object({
   prescriptionRequired: z.boolean().default(true),
   inStock: z.boolean().default(true),
   moq: z.number().int().min(1).default(1),
+  category: z.string().default("general"),
   imageUrl: z.string().nullable().optional(),
 });
 

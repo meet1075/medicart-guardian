@@ -71,6 +71,7 @@ const DEPARTMENTS = [
   "Gastroenterology",
   "Orthopaedics",
   "Cardiac-Diabetic",
+  "Gynaecology",
 ];
 
 function AboutPage() {
@@ -90,7 +91,7 @@ function AboutPage() {
             email: "obatmedicare@gmail.com",
             address: {
               "@type": "PostalAddress",
-              streetAddress: "MUMBAI & PATNA",
+              streetAddress: "MUMBAI",
               addressCountry: "IN"
             }
           }),
@@ -204,9 +205,7 @@ function AboutPage() {
                 <div className="mt-0.5 font-semibold text-foreground">
                   Mumbai, India
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Regional office in Patna, Bihar
-                </div>
+
               </div>
             </div>
           </div>

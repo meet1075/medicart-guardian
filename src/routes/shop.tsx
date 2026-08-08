@@ -31,14 +31,12 @@ export const Route = createFileRoute("/shop")({
 function ShopPage() {
   const { q } = Route.useSearch();
   const { medicines, isLoading } = useMedicines();
-  const [rxFilter, setRxFilter] = useState<"all" | "rx" | "otc">("all");
   const [maxPrice, setMaxPrice] = useState<number>(3000);
   const [sortBy, setSortBy] = useState<"popular" | "price-asc" | "price-desc">("popular");
   const [query, setQuery] = useState(q ?? "");
 
   const results = useMemo(() => {
     let list = [...medicines];
-    if (rxFilter !== "all") list = list.filter((m) => (rxFilter === "rx" ? m.prescriptionRequired : !m.prescriptionRequired));
     if (query) {
       const nq = query.toLowerCase();
       list = list.filter(
@@ -72,7 +70,7 @@ function ShopPage() {
         break;
     }
     return list;
-  }, [rxFilter, query, maxPrice, sortBy, medicines]);
+  }, [query, maxPrice, sortBy, medicines]);
 
   return (
     <PublicLayout>
@@ -95,22 +93,11 @@ function ShopPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Dolo"
+              placeholder="e.g. AB Gold"
               className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
             />
           </div>
 
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Prescription</div>
-            <div className="mt-2 flex flex-col gap-2 text-sm">
-              {(["all", "rx", "otc"] as const).map((k) => (
-                <label key={k} className="flex items-center gap-2">
-                  <input type="radio" checked={rxFilter === k} onChange={() => setRxFilter(k)} className="accent-primary" />
-                  {k === "all" ? "All" : k === "rx" ? "Prescription only" : "OTC only"}
-                </label>
-              ))}
-            </div>
-          </div>
 
           <div>
             <div className="flex items-center justify-between">
