@@ -25,7 +25,7 @@ import { getSeoMeta } from "@/lib/seo";
 export const Route = createFileRoute("/")({
   head: () => {
     const seo = getSeoMeta({
-      title: "MediCart — Genuine Medicines, Verified & Delivered",
+      title: "Obat Medicare — Genuine Medicines, Verified & Delivered",
       description: "MediCart is a licensed online pharmacy delivering genuine, pharmacist-verified medicines. Order prescription and OTC medicines, upload your Rx, and track delivery.",
       path: "/",
     });

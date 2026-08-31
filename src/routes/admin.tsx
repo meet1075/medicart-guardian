@@ -6,7 +6,7 @@ import { checkIsAdminFn } from "@/api/admin";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "MediCart — Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Obat Medicare — Admin" }, { name: "robots", content: "noindex" }],
   }),
   beforeLoad: async () => {
     const { isAdmin } = await checkIsAdminFn();

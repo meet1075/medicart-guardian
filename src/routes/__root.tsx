@@ -78,7 +78,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => {
     const seo = getSeoMeta({
-      title: "MediCart — Genuine Medicines, Verified & Delivered",
+      title: "Obat Medicare — Genuine Medicines, Verified & Delivered",
       description: "MediCart is a licensed online pharmacy delivering genuine, pharmacist-verified medicines. Order prescription and OTC medicines, upload your Rx, and track delivery.",
       path: "/",
     });

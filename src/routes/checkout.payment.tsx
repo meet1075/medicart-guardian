@@ -27,7 +27,7 @@ function loadRazorpayScript() {
 
 export const Route = createFileRoute("/checkout/payment")({
   head: () => ({
-    meta: [{ title: "Payment — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Payment — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: PaymentStep,
 });

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/shop")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => {
     const seo = getSeoMeta({
-      title: "Shop medicines — MediCart",
+      title: "Shop medicines — Obat Medicare",
       description: "Browse prescription and OTC medicines, vitamins, skincare, baby care, and health devices — verified by our pharmacist.",
       path: "/shop",
     });

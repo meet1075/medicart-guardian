@@ -25,7 +25,7 @@ export const Route = createFileRoute("/our-products")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => {
     const seo = getSeoMeta({
-      title: "Our Products — Obat Medicare | MediCart",
+      title: "Our Products — Obat Medicare",
       description: "Explore the Obat Medicare pharmaceutical product range — dermatology, general medicine, cardiac-diabetic, gastroenterology, and orthopaedics formulations.",
       path: "/our-products",
     });

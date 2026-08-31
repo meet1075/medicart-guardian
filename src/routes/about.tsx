@@ -21,7 +21,7 @@ import { getSeoMeta } from "@/lib/seo";
 export const Route = createFileRoute("/about")({
   head: () => {
     const seo = getSeoMeta({
-      title: "About Us — Obat Medicare | MediCart",
+      title: "About Us — Obat Medicare",
       description: "Learn about Obat Medicare Pvt Ltd — a third-generation, super-specialty pharmaceutical company founded in 2016 with a presence across dermatology, cardiac care, and more.",
       path: "/about",
     });

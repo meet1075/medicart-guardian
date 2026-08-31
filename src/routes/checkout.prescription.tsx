@@ -12,7 +12,7 @@ const PRESCRIPTION_KEY = "medicart.pending-prescription.v1";
 
 export const Route = createFileRoute("/checkout/prescription")({
   head: () => ({
-    meta: [{ title: "Upload prescription — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Upload prescription — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: PrescriptionStep,
 });

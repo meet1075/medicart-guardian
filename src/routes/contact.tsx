@@ -19,7 +19,7 @@ import { getSeoMeta } from "@/lib/seo";
 export const Route = createFileRoute("/contact")({
   head: () => {
     const seo = getSeoMeta({
-      title: "Contact Us — Obat Medicare | MediCart",
+      title: "Contact Us — Obat Medicare",
       description: "Get in touch with Obat Medicare. Reach us at our Mumbai office, call +91-9650506996, or email obatmedicareonline@gmail.com.",
       path: "/contact",
     });

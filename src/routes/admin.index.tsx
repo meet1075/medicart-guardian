@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
-    meta: [{ title: "Admin — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Admin — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminIndex,
 });

@@ -24,7 +24,7 @@ const addressSchema = z.object({
 
 export const Route = createFileRoute("/checkout/address")({
   head: () => ({
-    meta: [{ title: "Delivery address — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Delivery address — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: AddressStep,
 });

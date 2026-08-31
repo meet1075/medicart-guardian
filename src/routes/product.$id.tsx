@@ -18,7 +18,7 @@ export const Route = createFileRoute("/product/$id")({
     return { medicine: res.data as any };
   },
   head: ({ loaderData }) => {
-    if (!loaderData?.medicine) return { meta: [{ title: "Medicine — MediCart" }] };
+    if (!loaderData?.medicine) return { meta: [{ title: "Medicine — Obat Medicare" }] };
     
     const seo = getSeoMeta({
       title: `${loaderData.medicine.name} — ${loaderData.medicine.salt} | MediCart`,

@@ -19,7 +19,7 @@ import {
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
-    meta: [{ title: "Your cart — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Your cart — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: CartPage,
 });

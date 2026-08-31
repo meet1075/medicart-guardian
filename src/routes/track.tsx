@@ -8,7 +8,7 @@ import { MapPin } from "lucide-react";
 export const Route = createFileRoute("/track")({
   head: () => ({
     meta: [
-      { title: "Track your order — MediCart" },
+      { title: "Track your order — Obat Medicare" },
       { name: "description", content: "Track the status of your MediCart order." },
     ],
   }),

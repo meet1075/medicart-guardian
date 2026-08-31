@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, Clock, Package, Truck, Home, ShieldCheck }
 
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
-    meta: [{ title: "Order details — MediCart" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Order details — Obat Medicare" }, { name: "robots", content: "noindex" }],
   }),
   component: OrderPage,
 });
