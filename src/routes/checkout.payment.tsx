@@ -136,7 +136,7 @@ function PaymentStep() {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TBlc9zvMpPDJMh", // Use env var in prod
           amount: Math.round(order.total * 100).toString(),
           currency: "INR",
-          name: "MediCart",
+          name: "Obat Medicare",
           description: "Pharmacy Order",
           order_id: order.razorpayOrderId,
           handler: async function (response: any) {

@@ -253,8 +253,9 @@ export const createOrderFn = createServerFn({ method: "POST" })
 
       return successResponse("Order created successfully", order, 201);
     } catch (error) {
-      console.error(error);
-      return errorResponse("Failed to create order", (error as Error).message);
+      const err = error as Error;
+      console.error("[createOrderFn] CRASH:", err.name, err.message, err.stack);
+      return errorResponse("Failed to create order", err.message);
     }
   });
 
