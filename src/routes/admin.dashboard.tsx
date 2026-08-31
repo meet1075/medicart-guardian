@@ -3,7 +3,7 @@ import { AdminChrome } from "./admin";
 import { useStore } from "@/lib/store";
 import { useOrders } from "@/hooks/use-orders";
 import { useMemo } from "react";
-import { Clock, CheckCircle2, XCircle, ShoppingBag, DollarSign, Banknote, Smartphone, CreditCard } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, ShoppingBag, DollarSign, Smartphone, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/admin/dashboard")({
   component: DashboardLayout,
@@ -49,20 +49,18 @@ function Overview() {
 
   const revenueStats = useMemo(() => {
     let total = 0;
-    let cod = 0;
     let upi = 0;
     let card = 0;
     
     orders.forEach(o => {
       if (o.prescriptionStatus !== "rejected" && o.status !== "rejected") {
         total += o.total;
-        if (o.paymentMethod === "cod") cod += o.total;
-        else if (o.paymentMethod === "upi") upi += o.total;
+        if (o.paymentMethod === "upi") upi += o.total;
         else if (o.paymentMethod === "card") card += o.total;
       }
     });
 
-    return { total, cod, upi, card };
+    return { total, upi, card };
   }, [orders]);
 
   const recent = orders.slice(0, 5);
@@ -86,7 +84,6 @@ function Overview() {
           <h2 className="text-lg font-semibold">Revenue Insights (All-Time)</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Revenue" value={`₹${revenueStats.total.toFixed(2)}`} icon={<DollarSign size={18} />} tone="success" />
-            <StatCard label="Cash (COD)" value={`₹${revenueStats.cod.toFixed(2)}`} icon={<Banknote size={18} />} />
             <StatCard label="UPI" value={`₹${revenueStats.upi.toFixed(2)}`} icon={<Smartphone size={18} />} />
             <StatCard label="Card / Netbanking" value={`₹${revenueStats.card.toFixed(2)}`} icon={<CreditCard size={18} />} />
           </div>

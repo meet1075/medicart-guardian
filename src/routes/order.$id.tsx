@@ -123,7 +123,7 @@ function OrderPage() {
               <div className="my-2 border-t border-border" />
               <Row label="Total" value={`₹${order.total.toFixed(2)}`} bold />
               <div className="mt-2 text-xs uppercase text-muted-foreground">
-                Paid via {order.paymentMethod === "cod" ? "Cash on Delivery" : order.paymentMethod.toUpperCase()}
+                Paid via {order.paymentMethod.toUpperCase()}
               </div>
             </div>
           </aside>
@@ -228,18 +228,50 @@ function Timeline({ order }: { order: FullOrder }) {
       {/* Dynamic Shiprocket Tracking Info */}
       {(order as any).isShipmentCreated && (order as any).shipmentStatus && (
         <div className="mt-6 border-t border-border pt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">Live Tracking</h3>
-          <div className="rounded-lg bg-primary/5 p-4 border border-primary/10">
-            <div className="font-semibold text-sm">Status: {(order as any).shipmentStatus}</div>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Live Tracking</h3>
+          <div className="rounded-lg bg-primary/5 p-4 border border-primary/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground">Status</div>
+                <div className="font-semibold text-sm text-foreground">{(order as any).shipmentStatus}</div>
+              </div>
+              {(order as any).awbCode && (order as any).trackingUrl && (
+                <a
+                  href={(order as any).trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Truck size={12} />
+                  Track Package
+                </a>
+              )}
+            </div>
+
             {(order as any).awbCode && (
-              <div className="mt-2 text-xs text-muted-foreground space-y-1">
-                <div>Courier: <span className="font-medium text-foreground">{(order as any).courierName}</span></div>
-                <div>AWB: <span className="font-medium text-foreground">{(order as any).awbCode}</span></div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>
+                  <div className="font-semibold text-foreground/70 mb-0.5">Courier</div>
+                  <div className="font-medium text-foreground">{(order as any).courierName || "Assigned"}</div>
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground/70 mb-0.5">AWB Number</div>
+                  <div className="font-mono text-[11px] text-foreground break-all">{(order as any).awbCode}</div>
+                </div>
               </div>
             )}
-            {(order as any).pickupStatus && (
-              <div className="mt-1 text-xs text-muted-foreground">
-                Pickup: <span className="font-medium text-foreground">{(order as any).pickupStatus}</span>
+
+            {(order as any).estimatedDelivery && (
+              <div className="rounded-md bg-success/10 border border-success/20 px-3 py-2 text-xs">
+                <span className="text-success font-semibold">Estimated Delivery: </span>
+                <span className="font-bold text-foreground">
+                  {new Date((order as any).estimatedDelivery).toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
               </div>
             )}
           </div>

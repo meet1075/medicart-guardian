@@ -97,7 +97,8 @@ function LoginPage() {
             Log in to manage your orders and prescriptions.
           </p>
 
-          {step === 1 && (
+          {/* HIDING OTP LOGIN TEMPORARILY */}
+          {false && step === 1 && (
             <form onSubmit={handleSendOtp} className="mt-8 space-y-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -125,7 +126,7 @@ function LoginPage() {
             </form>
           )}
 
-          {step === 2 && (
+          {false && step === 2 && (
             <form onSubmit={handleVerifyOtp} className="mt-8 space-y-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -161,7 +162,7 @@ function LoginPage() {
             </form>
           )}
 
-          {step === 3 && (
+          {false && step === 3 && (
             <form onSubmit={handleUpdateProfile} className="mt-8 space-y-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -205,14 +206,16 @@ function LoginPage() {
             </form>
           )}
 
-          <div className="relative mt-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+          {false && (
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-surface px-2 text-muted-foreground uppercase tracking-wider font-semibold">Or continue with</span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-surface px-2 text-muted-foreground uppercase tracking-wider font-semibold">Or continue with</span>
-            </div>
-          </div>
+          )}
 
           <button
             type="button"
@@ -236,9 +239,9 @@ function LoginPage() {
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Having trouble?{" "}
-            <a href="mailto:support@obatmedicare.com" className="font-semibold text-primary hover:underline">
+            <Link to="/contact" className="font-semibold text-primary hover:underline">
               Contact Support
-            </a>
+            </Link>
           </p>
         </div>
       </div>

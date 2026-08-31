@@ -148,10 +148,10 @@ export function PublicFooter() {
             <li className="flex items-center gap-2">
               <Mail size={14} className="shrink-0 text-primary" />
               <a
-                href="mailto:obatmedicare@gmail.com"
+                href="mailto:obatmedicareonline@gmail.com"
                 className="break-all hover:text-primary"
               >
-                obatmedicare@gmail.com
+                obatmedicareonline@gmail.com
               </a>
             </li>
           </ul>

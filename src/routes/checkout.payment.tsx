@@ -3,7 +3,7 @@ import { CheckoutFrame } from "@/components/CheckoutFrame";
 import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import type { Address, Order, PrescriptionFile } from "@/lib/types";
-import { Banknote, CreditCard, Smartphone, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useOrders } from "@/hooks/use-orders";
 import { useMedicines } from "@/hooks/use-medicines";
@@ -37,7 +37,7 @@ function PaymentStep() {
   const { createOrder: submitOrder, verifyPayment } = useOrders();
   const { medicines } = useMedicines();
   const navigate = useNavigate();
-  const [method, setMethod] = useState<Order["paymentMethod"]>("upi");
+  const [method] = useState<Order["paymentMethod"]>("upi");
   const [placing, setPlacing] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
 
@@ -86,7 +86,7 @@ function PaymentStep() {
       .filter(Boolean) as any[];
 
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-    const delivery = address.deliverySlot === "express" ? 79 : subtotal > 499 ? 0 : 39;
+    const delivery = subtotal >= 1000 ? 0 : 39;
     const hasRx = items.some((i) => i.prescriptionRequired);
 
     const itemVerifications = items
@@ -119,7 +119,6 @@ function PaymentStep() {
           state: address.state,
           pincode: address.pincode,
           type: address.type,
-          deliverySlot: address.deliverySlot,
         },
         prescriptionFiles: pfData.length > 0 ? pfData : undefined,
         itemVerifications: itemVerifications.length > 0 ? itemVerifications : undefined,
@@ -159,17 +158,18 @@ function PaymentStep() {
             contact: address.phone,
           },
           theme: { color: "#2563eb" },
+          modal: {
+            ondismiss: function () {
+              setPlacing(false);
+            },
+          },
         };
-
         const rzp = new (window as any).Razorpay(options);
         rzp.on("payment.failed", function (response: any) {
           toast.error(response.error.description || "Payment failed");
           setPlacing(false);
         });
         rzp.open();
-      } else {
-        // COD or pure free order
-        completeOrder(order.id);
       }
     } catch (error) {
       toast.error("Failed to place order: " + (error as Error).message);
@@ -191,8 +191,8 @@ function PaymentStep() {
         <h2 className="text-lg font-semibold">Payment method</h2>
         <div className="mt-4 space-y-3">
           <PayOption
-            selected={method === "upi"}
-            onClick={() => setMethod("upi")}
+            selected={true}
+            onClick={() => {}}
             icon={<ShieldCheck size={20} />}
             title="Pay Online Securely"
             subtitle="UPI, Cards, Netbanking via Razorpay"
@@ -214,8 +214,7 @@ function PaymentStep() {
 
         <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-primary-soft/40 p-4 text-xs text-foreground/80">
           <ShieldCheck size={16} className="mt-0.5 flex-none text-primary" />
-          Payments are processed over an encrypted connection. This demo simulates a real payment gateway
-          (Razorpay/Stripe) without charging your account.
+          Payments are processed securely via Razorpay. Your connection is fully encrypted.
         </div>
 
         <div className="mt-6 flex justify-end">

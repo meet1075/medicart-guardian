@@ -20,7 +20,7 @@ export const Route = createFileRoute("/contact")({
   head: () => {
     const seo = getSeoMeta({
       title: "Contact Us — Obat Medicare | MediCart",
-      description: "Get in touch with Obat Medicare. Reach us at our Mumbai office, call +91-9650506996, or email obatmedicare@gmail.com.",
+      description: "Get in touch with Obat Medicare. Reach us at our Mumbai office, call +91-9650506996, or email obatmedicareonline@gmail.com.",
       path: "/contact",
     });
     return {
@@ -59,8 +59,8 @@ const CONTACT_DETAILS = [
   {
     icon: Mail,
     label: "Email",
-    value: "obatmedicare@gmail.com",
-    href: "mailto:obatmedicare@gmail.com",
+    value: "obatmedicareonline@gmail.com",
+    href: "mailto:obatmedicareonline@gmail.com",
     accent: "text-info",
     accentBg: "bg-info/10",
   },
@@ -129,7 +129,7 @@ function ContactPage() {
             description: "Reach us at our Mumbai office.",
             url: "https://obatmedicare.com/contact",
             telephone: "+91-9650506996",
-            email: "obatmedicare@gmail.com",
+            email: "obatmedicareonline@gmail.com",
             address: {
               "@type": "PostalAddress",
               streetAddress: "MUMBAI",

@@ -78,6 +78,8 @@ export const auth = betterAuth({
         "https://medicart-guardian-self.vercel.app",
         "http://localhost:8080",
         "http://localhost:3000",
+        "https://www.obatmedicare.in",
+        "https://obatmedicare.in",
     ],
     user: {
         additionalFields: {

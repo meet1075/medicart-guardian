@@ -112,7 +112,6 @@ export function buildDemoOrder(): Order {
       state: "Karnataka",
       pincode: "560001",
       type: "Home",
-      deliverySlot: "standard",
     },
     paymentMethod: "upi",
     status: "under_review",

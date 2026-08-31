@@ -65,7 +65,6 @@ export interface Address {
   state: string;
   pincode: string;
   type: "Home" | "Work";
-  deliverySlot: "standard" | "express";
 }
 
 export type MatchStatus = "matched" | "possible" | "not_found";
@@ -105,7 +104,7 @@ export interface Order {
   hasRx: boolean;
   prescriptionFiles: PrescriptionFile[];
   address: Address;
-  paymentMethod: "card" | "upi" | "cod";
+  paymentMethod: "card" | "upi";
   status: OrderStatus;
   prescriptionStatus?: PrescriptionStatus;
   rejectReason?: string;

@@ -480,7 +480,27 @@ function ShipmentManagementCard({ order }: { order: any }) {
                 <div className="font-medium">{order.pickupStatus}</div>
               </>
             )}
+
+            {(order as any).estimatedDelivery && (
+              <>
+                <div className="text-muted-foreground">Est. Delivery:</div>
+                <div className="font-medium text-success">
+                  {new Date((order as any).estimatedDelivery).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+              </>
+            )}
           </div>
+
+          {(order as any).trackingUrl && (
+            <a
+              href={(order as any).trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary/10 text-primary px-3 py-2 text-xs font-semibold hover:bg-primary/20 transition-colors"
+            >
+              Open Tracking Page ↗
+            </a>
+          )}
 
           <div className="pt-3 border-t flex flex-col gap-2">
             {!order.awbCode && (

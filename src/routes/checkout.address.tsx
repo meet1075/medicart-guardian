@@ -19,7 +19,6 @@ const addressSchema = z.object({
   state: z.string().trim().min(2, "State is required").max(60),
   pincode: z.string().trim().regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
   type: z.enum(["Home", "Work"]),
-  deliverySlot: z.enum(["standard", "express"]),
   save: z.boolean().optional(),
 });
 
@@ -45,7 +44,6 @@ function AddressStep() {
       state: "",
       pincode: "",
       type: "Home" as const,
-      deliverySlot: "standard" as const,
       save: true,
     };
     if (typeof window === "undefined") return base;
@@ -205,26 +203,6 @@ function AddressStep() {
           </Field>
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold">Delivery slot</h3>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            <SlotOption
-              selected={values.deliverySlot === "standard"}
-              title="Standard"
-              subtitle="Delivered in 2–3 days"
-              price="Free over ₹499"
-              onClick={() => update("deliverySlot", "standard")}
-            />
-            <SlotOption
-              selected={values.deliverySlot === "express"}
-              title="Express"
-              subtitle="Next-day delivery"
-              price="₹79"
-              onClick={() => update("deliverySlot", "express")}
-            />
-          </div>
-        </div>
-
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -276,32 +254,3 @@ function inputClass(err: boolean) {
   } bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20`;
 }
 
-function SlotOption({
-  selected,
-  title,
-  subtitle,
-  price,
-  onClick,
-}: {
-  selected: boolean;
-  title: string;
-  subtitle: string;
-  price: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-lg border p-4 text-left ${
-        selected ? "border-primary bg-primary-soft" : "border-border bg-background"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="text-sm font-semibold text-primary">{price}</div>
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
-    </button>
-  );
-}

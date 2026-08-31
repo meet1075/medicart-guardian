@@ -213,6 +213,7 @@ function MedicineEditorModal({
     packSize: medicine?.packSize || "",
     dosageForm: medicine?.dosageForm || "",
     category: (medicine as any)?.category || "general",
+    moq: (medicine as any)?.moq || 1,
     prescriptionRequired: medicine?.prescriptionRequired ?? true,
     inStock: medicine?.inStock ?? true,
     imageUrl: (medicine as any)?.imageUrl || null as string | null,
@@ -469,6 +470,23 @@ function MedicineEditorModal({
                 value={formData.packSize}
                 onChange={handleChange}
                 placeholder="e.g. 10 Tablets"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            </div>
+
+            {/* MOQ */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                Minimum Order Qty (MOQ)
+              </label>
+              <input
+                required
+                type="number"
+                min="1"
+                step="1"
+                name="moq"
+                value={(formData as any).moq}
+                onChange={handleChange}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
             </div>

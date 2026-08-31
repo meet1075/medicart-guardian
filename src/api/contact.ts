@@ -16,7 +16,7 @@ export const sendContactEmailFn = createServerFn({ method: "POST" })
     try {
       if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         console.warn("SMTP credentials not found. Simulating email sending for development.");
-        console.log("Simulated email to:", data.email, "and", process.env.CONTACT_EMAIL || "obatmedicare@gmail.com");
+        console.log("Simulated email to:", data.email, "and", process.env.CONTACT_EMAIL || "obatmedicareonline@gmail.com");
         return { success: true };
       }
 
@@ -30,10 +30,10 @@ export const sendContactEmailFn = createServerFn({ method: "POST" })
         },
       });
 
-      // 1. Send the inquiry to the business email (obatmedicare@gmail.com)
+      // 1. Send the inquiry to the business email (obatmedicareonline@gmail.com)
       await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: process.env.CONTACT_EMAIL || "obatmedicare@gmail.com",
+        to: process.env.CONTACT_EMAIL || "obatmedicareonline@gmail.com",
         subject: `New Contact Form Inquiry from ${data.name}`,
         html: `
           <h3>New Inquiry from Website Contact Form</h3>
@@ -58,7 +58,7 @@ export const sendContactEmailFn = createServerFn({ method: "POST" })
           <br/>
           <p>Best Regards,</p>
           <p><strong>Obat Medicare Team</strong></p>
-          <p>Email: obatmedicare@gmail.com</p>
+          <p>Email: obatmedicareonline@gmail.com</p>
           <p>Phone: +91-9650506996</p>
         `,
       });

@@ -27,6 +27,23 @@ export async function tryCreateShiprocketShipment(orderId: string) {
 
     const shiprocketData = await createShiprocketOrder(order);
 
+    // Auto-generate AWB immediately after order creation
+    let awbCode = "";
+    let courierName = "";
+    let trackingUrl = "";
+
+    try {
+      const awbResponse = await generateAWB(String(shiprocketData.shipment_id));
+      const awbData = awbResponse?.response?.data;
+      if (awbData?.awb_code) {
+        awbCode = awbData.awb_code;
+        courierName = awbData.courier_name || "";
+        trackingUrl = `https://shiprocket.co/tracking/${awbCode}`;
+      }
+    } catch (awbErr) {
+      console.warn("AWB auto-generation failed, will need manual generation:", awbErr);
+    }
+
     await db.order.update({
       where: { id: orderId },
       data: {
@@ -35,6 +52,7 @@ export async function tryCreateShiprocketShipment(orderId: string) {
         shipmentId: String(shiprocketData.shipment_id),
         shipmentStatus: "Processing",
         shipmentError: null,
+        ...(awbCode && { awbCode, courierName, trackingUrl }),
       },
     });
   } catch (error: any) {

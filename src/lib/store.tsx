@@ -220,7 +220,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .filter((i) => i.price > 0) as Order["items"];
 
       const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-      const delivery = address.deliverySlot === "express" ? 79 : subtotal > 499 ? 0 : 39;
+      const delivery = subtotal >= 1000 ? 0 : 39;
       const hasRx = items.some((i) => i.prescriptionRequired);
 
       // AI-assisted comparison against extracted prescription medicines

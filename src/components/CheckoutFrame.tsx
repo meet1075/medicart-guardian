@@ -27,7 +27,7 @@ export function CheckoutFrame({
     .map((c) => ({ m: medicines.find((x) => x.id === c.medicineId), qty: c.qty }))
     .filter((x) => x.m) as { m: any; qty: number }[];
   const subtotal = items.reduce((s, i) => s + i.m.mrp * i.qty, 0);
-  const delivery = subtotal > 499 ? 0 : items.length ? 39 : 0;
+  const delivery = subtotal >= 1000 ? 0 : items.length ? 39 : 0;
   const total = subtotal + delivery;
 
   return (

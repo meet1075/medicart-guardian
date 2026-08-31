@@ -100,7 +100,6 @@ const CreateOrderSchema = z.object({
     state: z.string(),
     pincode: z.string(),
     type: z.string(),
-    deliverySlot: z.string(),
   }),
   prescriptionFiles: z.array(z.object({
     name: z.string(),
@@ -164,7 +163,7 @@ export const createOrderFn = createServerFn({ method: "POST" })
         const dbMed = priceMap.get(item.medicineId)!;
         return sum + dbMed.mrp * item.qty;
       }, 0);
-      const serverDelivery = data.address.deliverySlot === "express" ? 79 : serverSubtotal > 499 ? 0 : 39;
+      const serverDelivery = serverSubtotal >= 1000 ? 0 : 39;
       const serverTotal = serverSubtotal + serverDelivery;
 
       // Reject if client total is more than ₹5 off from server-computed total

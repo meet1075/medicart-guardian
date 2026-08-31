@@ -67,7 +67,7 @@ function CartPage() {
   const otcItems = items.filter((i) => !i.m.prescriptionRequired);
 
   const subtotal = items.reduce((s, i) => s + i.m.mrp * i.qty, 0);
-  const delivery = subtotal > 499 ? 0 : items.length ? 39 : 0;
+  const delivery = subtotal >= 1000 ? 0 : items.length ? 39 : 0;
   const total = subtotal + delivery;
 
   if (items.length === 0) {
@@ -165,7 +165,7 @@ function CartPage() {
               Proceed
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Free delivery on orders over ₹499
+              Free delivery on orders over ₹999
             </p>
           </aside>
         </div>

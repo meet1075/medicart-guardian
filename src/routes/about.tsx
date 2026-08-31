@@ -88,7 +88,7 @@ function AboutPage() {
             description: "A third-generation, super-specialty pharmaceutical company.",
             url: "https://obatmedicare.com/about",
             telephone: "+91-9650506996",
-            email: "obatmedicare@gmail.com",
+            email: "obatmedicareonline@gmail.com",
             address: {
               "@type": "PostalAddress",
               streetAddress: "MUMBAI",
@@ -371,10 +371,10 @@ function AboutPage() {
                   <Phone size={13} /> +91-9650506996
                 </a>
                 <a
-                  href="mailto:obatmedicare@gmail.com"
+                  href="mailto:obatmedicareonline@gmail.com"
                   className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
                 >
-                  <Mail size={13} /> obatmedicare@gmail.com
+                  <Mail size={13} /> obatmedicareonline@gmail.com
                 </a>
               </div>
             </div>

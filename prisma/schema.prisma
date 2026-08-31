@@ -53,7 +53,6 @@ model Address {
   state        String
   pincode      String
   type         String   @default("Home")
-  deliverySlot String   @default("standard")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   userId       String?
@@ -88,6 +87,7 @@ model Order {
   isShipmentCreated  Boolean            @default(false)
   shipmentError      String?
   lastShipmentSync   DateTime?
+  estimatedDelivery  DateTime?
   userId             String?
   addressId          String
   itemVerifications  ItemVerification[]
