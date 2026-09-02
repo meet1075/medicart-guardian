@@ -1,6 +1,6 @@
 export interface ApiResponse<T = any> {
   status: "success" | "error";
-  code: number;
+  statusCode: number;
   message: string;
   data?: T;
   error?: string;
@@ -9,11 +9,11 @@ export interface ApiResponse<T = any> {
 export function successResponse<T>(
   message: string,
   data?: T,
-  code: number = 200,
+  statusCode: number = 200,
 ): ApiResponse<T> {
   return {
     status: "success",
-    code,
+    statusCode,
     message,
     data,
   };
@@ -22,7 +22,7 @@ export function successResponse<T>(
 export function errorResponse(
   message: string,
   error?: string,
-  code: number = 400,
+  statusCode: number = 400,
 ): ApiResponse<never> {
   // Never leak internal error details (DB schema, stack traces) to clients in production
   const safeError =
@@ -32,7 +32,7 @@ export function errorResponse(
 
   return {
     status: "error",
-    code,
+    statusCode,
     message,
     error: safeError,
   };

@@ -323,7 +323,6 @@ function OrderDetailsPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="font-semibold text-sm">{item.name}</div>
-                        <MatchPill status={v.aiStatus as MatchStatus} />
                       </div>
                       <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
                         <input
@@ -455,27 +454,6 @@ function Kv({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-function MatchPill({ status }: { status: MatchStatus }) {
-  if (status === "matched")
-    return (
-      <span className="whitespace-nowrap rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">
-        Matched
-      </span>
-    );
-  if (status === "possible")
-    return (
-      <span className="whitespace-nowrap rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
-        Possible match
-      </span>
-    );
-  return (
-    <span className="whitespace-nowrap rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
-      Not found
-    </span>
-  );
-}
-
 function ShipmentManagementCard({ order }: { order: any }) {
   const { retryShipmentCreation, generateAwb, schedulePickup, cancelShipment } = useShiprocket();
 
