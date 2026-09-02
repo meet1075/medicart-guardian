@@ -2,16 +2,11 @@ import { createFileRoute, Outlet, Link, useNavigate, redirect } from "@tanstack/
 import { useAuth } from "@/hooks/use-auth";
 import { LayoutDashboard, Package, FileText, LogOut, Cross, Users, Image as ImageIcon } from "lucide-react";
 import { useEffect } from "react";
-import { checkIsAdminFn } from "@/api/admin";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [{ title: "Obat Medicare — Admin" }, { name: "robots", content: "noindex" }],
   }),
-  beforeLoad: async () => {
-    const { isAdmin } = await checkIsAdminFn();
-    if (!isAdmin) throw redirect({ to: "/login", replace: true });
-  },
   component: AdminLayout,
 });
 
@@ -56,7 +51,7 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
             <Cross size={16} strokeWidth={2.5} />
           </div>
           <div>
-            <div className="text-sm font-bold">MediCart</div>
+            <div className="text-sm font-bold">Obat Medicare</div>
             <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Admin Console
             </div>
@@ -106,7 +101,7 @@ export function AdminChrome({ children, active }: { children: React.ReactNode; a
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Cross size={16} strokeWidth={2.5} />
               </div>
-              <span className="font-bold">MediCart Admin</span>
+              <span className="font-bold">Obat Medicare Admin</span>
             </div>
             <button
               type="button"

@@ -28,6 +28,7 @@ function OrderDetailsPage() {
   const { user } = useAuth();
   const { orders, updateOrderStatus, toggleItemVerification, isUpdating } = useOrders();
   const [rejectMode, setRejectMode] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const order = orders.find((o) => o.id === id);
@@ -79,7 +80,8 @@ function OrderDetailsPage() {
   }
 
   return (
-    <div className="max-w-6xl pb-10">
+    <>
+      <div className="max-w-6xl pb-10">
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={() => navigate({ to: "/admin/dashboard/orders" })}
@@ -171,13 +173,17 @@ function OrderDetailsPage() {
                           </div>
                         </div>
                       ) : f.mimeType.startsWith("image/") ? (
-                        <a href={f.dataUrl} target="_blank" rel="noopener noreferrer">
+                        <button
+                          type="button"
+                          onClick={() => setLightboxUrl(f.dataUrl)}
+                          className="w-full cursor-zoom-in"
+                        >
                           <img
                             src={f.dataUrl}
                             alt={f.name}
-                            className="max-h-[500px] w-full object-contain"
+                            className="max-h-[500px] w-full object-contain hover:opacity-90 transition-opacity"
                           />
-                        </a>
+                        </button>
                       ) : (
                         <a
                           href={f.dataUrl}
@@ -412,6 +418,32 @@ function OrderDetailsPage() {
         </div>
       </div>
     </div>
+
+      {/* Prescription Image Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-4xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setLightboxUrl(null)}
+              className="absolute -top-10 right-0 text-white/80 hover:text-white text-sm font-semibold flex items-center gap-1"
+            >
+              ✕ Close
+            </button>
+            <img
+              src={lightboxUrl}
+              alt="Prescription"
+              className="max-h-[90vh] w-full rounded-xl object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -559,6 +591,7 @@ function ShipmentManagementCard({ order }: { order: any }) {
           )}
         </div>
       )}
+
     </div>
   );
 }
