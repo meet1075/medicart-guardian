@@ -19,10 +19,20 @@ export const Route = createFileRoute("/shop")({
       title: "Shop medicines — Obat Medicare",
       description: "Browse prescription and OTC medicines, vitamins, skincare, baby care, and health devices — verified by our pharmacist.",
       path: "/shop",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Shop medicines — Obat Medicare",
+          "description": "Browse prescription and OTC medicines, vitamins, skincare, baby care, and health devices.",
+          "url": "https://obatmedicare.in/shop"
+        }
+      ]
     });
     return {
       meta: seo.meta,
       links: seo.links,
+      scripts: seo.scripts,
     };
   },
   component: ShopPage,

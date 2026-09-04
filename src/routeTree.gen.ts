@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as OurProductsRouteImport } from './routes/our-products'
 import { Route as LoginRouteImport } from './routes/login'
@@ -36,6 +37,11 @@ import { Route as AdminDashboardOrdersIdRouteImport } from './routes/admin.dashb
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopRoute = ShopRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/our-products': typeof OurProductsRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/checkout/address': typeof CheckoutAddressRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/our-products': typeof OurProductsRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/checkout/address': typeof CheckoutAddressRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/our-products': typeof OurProductsRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/track': typeof TrackRoute
   '/admin/dashboard': typeof AdminDashboardRouteWithChildren
   '/checkout/address': typeof CheckoutAddressRoute
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/our-products'
     | '/shop'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/dashboard'
     | '/checkout/address'
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/our-products'
     | '/shop'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/dashboard'
     | '/checkout/address'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/our-products'
     | '/shop'
+    | '/sitemap.xml'
     | '/track'
     | '/admin/dashboard'
     | '/checkout/address'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OurProductsRoute: typeof OurProductsRoute
   ShopRoute: typeof ShopRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrackRoute: typeof TrackRoute
   CheckoutAddressRoute: typeof CheckoutAddressRoute
   CheckoutPaymentRoute: typeof CheckoutPaymentRoute
@@ -329,6 +342,13 @@ declare module '@tanstack/react-router' {
       path: '/track'
       fullPath: '/track'
       preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shop': {
@@ -546,6 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OurProductsRoute: OurProductsRoute,
   ShopRoute: ShopRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrackRoute: TrackRoute,
   CheckoutAddressRoute: CheckoutAddressRoute,
   CheckoutPaymentRoute: CheckoutPaymentRoute,

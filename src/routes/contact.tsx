@@ -22,10 +22,29 @@ export const Route = createFileRoute("/contact")({
       title: "Contact Us — Obat Medicare",
       description: "Get in touch with Obat Medicare. Reach us at our Mumbai office, call +91-9650506996, or email obatmedicareonline@gmail.com.",
       path: "/contact",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "name": "Obat Medicare Pvt Ltd",
+          "image": "https://obatmedicare.in/favicon.ico",
+          "description": "Reach us at our Mumbai office.",
+          "url": "https://obatmedicare.in/contact",
+          "telephone": "+91-9650506996",
+          "email": "obatmedicareonline@gmail.com",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "MUMBAI",
+            "addressCountry": "IN"
+          },
+          "openingHours": "Mo-Sa 09:00-18:00"
+        }
+      ]
     });
     return {
       meta: seo.meta,
       links: seo.links,
+      scripts: seo.scripts,
     };
   },
   component: ContactPage,
@@ -118,27 +137,6 @@ function ContactPage() {
 
   return (
     <PublicLayout>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            name: "Obat Medicare Pvt Ltd",
-            image: "https://obatmedicare.com/favicon.ico",
-            description: "Reach us at our Mumbai office.",
-            url: "https://obatmedicare.com/contact",
-            telephone: "+91-9650506996",
-            email: "obatmedicareonline@gmail.com",
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "MUMBAI",
-              addressCountry: "IN"
-            },
-            openingHours: "Mo-Sa 09:00-18:00"
-          }),
-        }}
-      />
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-primary/50" />

@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import * as _xlsx from "xlsx";
-const xlsx = _xlsx.default || _xlsx;
+import * as xlsx from "xlsx";
 
 
 const db = new PrismaClient();

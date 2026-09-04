@@ -79,8 +79,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => {
     const seo = getSeoMeta({
       title: "Obat Medicare — Genuine Medicines, Verified & Delivered",
-      description: "MediCart is a licensed online pharmacy delivering genuine, pharmacist-verified medicines. Order prescription and OTC medicines, upload your Rx, and track delivery.",
+      description: "Obat Medicare is a licensed online pharmacy delivering genuine, pharmacist-verified medicines. Order prescription and OTC medicines, upload your Rx, and track delivery.",
       path: "/",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Obat Medicare",
+          url: "https://obatmedicare.in",
+          logo: "https://obatmedicare.in/logo.svg",
+          contactPoint: {
+            "@type": "ContactPoint",
+            telephone: "+91-1800-123-4567",
+            contactType: "customer service",
+          },
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Obat Medicare",
+          url: "https://obatmedicare.in",
+        }
+      ]
     });
 
     return {
@@ -101,6 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
         },
       ],
+      scripts: seo.scripts,
     };
   },
   shellComponent: RootShell,

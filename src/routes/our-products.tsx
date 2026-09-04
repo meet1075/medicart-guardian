@@ -28,10 +28,20 @@ export const Route = createFileRoute("/our-products")({
       title: "Our Products — Obat Medicare",
       description: "Explore the Obat Medicare pharmaceutical product range — dermatology, general medicine, cardiac-diabetic, gastroenterology, and orthopaedics formulations.",
       path: "/our-products",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "Our Products — Obat Medicare",
+          "description": "Explore the Obat Medicare pharmaceutical product range.",
+          "url": "https://obatmedicare.in/our-products"
+        }
+      ]
     });
     return {
       meta: seo.meta,
       links: seo.links,
+      scripts: seo.scripts,
     };
   },
   component: OurProductsPage,

@@ -24,10 +24,20 @@ export const Route = createFileRoute("/about")({
       title: "About Us — Obat Medicare",
       description: "Learn about Obat Medicare Pvt Ltd — a third-generation, super-specialty pharmaceutical company founded in 2016 with a presence across dermatology, cardiac care, and more.",
       path: "/about",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About Us — Obat Medicare",
+          "description": "Learn about Obat Medicare Pvt Ltd — a third-generation, super-specialty pharmaceutical company founded in 2016.",
+          "url": "https://obatmedicare.in/about"
+        }
+      ]
     });
     return {
       meta: seo.meta,
       links: seo.links,
+      scripts: seo.scripts,
     };
   },
   component: AboutPage,

@@ -45,19 +45,6 @@ function LandingPage() {
   
   return (
     <PublicLayout>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "Obat Medicare Pvt Ltd",
-            url: "https://obatmedicare.com",
-            logo: "https://obatmedicare.com/logo.svg",
-            description: "A third-generation, super-specialty pharmaceutical company.",
-          }),
-        }}
-      />
       {/* ── 1. Premium Hero Section ── */}
       <section className="relative overflow-hidden bg-surface">
         {/* Abstract Background Elements */}

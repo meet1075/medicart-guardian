@@ -1,11 +1,16 @@
-export const BASE_URL = "https://obatmedicare.com";
-
+export const getBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return "https://www.obatmedicare.in";
+};
 interface SeoProps {
   title: string;
   description: string;
   path: string;
   image?: string;
   type?: "website" | "article" | "product";
+  jsonLd?: Record<string, any>[];
 }
 
 export function getSeoMeta({
@@ -14,7 +19,9 @@ export function getSeoMeta({
   path,
   image = "/logo.svg",
   type = "website",
+  jsonLd = [],
 }: SeoProps) {
+  const BASE_URL = getBaseUrl();
   const url = `${BASE_URL}${path}`;
   const fullImage = image.startsWith("http") ? image : `${BASE_URL}${image}`;
 
@@ -35,5 +42,9 @@ export function getSeoMeta({
     links: [
       { rel: "canonical", href: url },
     ],
+    scripts: jsonLd.map((schema) => ({
+      type: "application/ld+json",
+      children: JSON.stringify(schema),
+    })),
   };
 }

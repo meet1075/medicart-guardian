@@ -1,8 +1,8 @@
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /checkout/
+Disallow: /admin
 Disallow: /cart
-Disallow: /track
+Disallow: /checkout
+Disallow: /order
 
-Sitemap: https://obatmedicare.com/sitemap.xml
+Sitemap: https://obatmedicare.in/sitemap.xml
