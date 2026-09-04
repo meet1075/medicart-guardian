@@ -6,9 +6,10 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const BASE_URL = url.origin; // Dynamically uses www or non-www depending on the request
-
+        // Vercel proxies requests, so we need to read the forwarded headers
+        const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "obatmedicare.in";
+        const protocol = request.headers.get("x-forwarded-proto") || "https";
+        const BASE_URL = `${protocol}://${host}`;
         const entries = [
           { path: "/", priority: "1.0", changefreq: "weekly" },
           { path: "/shop", priority: "0.9", changefreq: "daily" },
