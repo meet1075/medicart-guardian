@@ -5,11 +5,9 @@ const TODAY = new Date().toISOString().split("T")[0];
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        // Vercel proxies requests, so we need to read the forwarded headers
-        const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "obatmedicare.in";
-        const protocol = request.headers.get("x-forwarded-proto") || "https";
-        const BASE_URL = `${protocol}://${host}`;
+      GET: async () => {
+        // Hardcode strictly to .in to prevent any proxy/host-header spoofing
+        const BASE_URL = "https://obatmedicare.in";
         const entries = [
           { path: "/", priority: "1.0", changefreq: "weekly" },
           { path: "/shop", priority: "0.9", changefreq: "daily" },
