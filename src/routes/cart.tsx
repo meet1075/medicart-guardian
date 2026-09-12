@@ -153,7 +153,7 @@ function CartPage() {
             <button
               type="button"
               onClick={() => {
-                const target = cartHasRx ? "/checkout/prescription" : "/checkout/address";
+                const target = "/checkout/prescription";
                 if (!user) {
                   setShowLoginPrompt(true);
                 } else {

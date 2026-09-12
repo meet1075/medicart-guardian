@@ -6,6 +6,7 @@ import { z } from "zod";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import { tryCreateShiprocketShipment } from "./shiprocket.api";
+import { uploadPrescriptionToSupabase } from "./upload";
 
 const VALID_ORDER_STATUSES = [
   "payment_pending",
@@ -107,7 +108,7 @@ const CreateOrderSchema = z.object({
     mimeType: z.string(),
     dataUrl: z.string(),
     aiExtractionResult: z.any().optional(),
-  })).optional(),
+  })).min(1, "A valid doctor's prescription is required"),
   itemVerifications: z.array(z.object({
     medicineId: z.string(),
     aiStatus: z.string(),
@@ -172,13 +173,21 @@ export const createOrderFn = createServerFn({ method: "POST" })
         return errorResponse("Order total mismatch. Please refresh your cart.", undefined, 400);
       }
       // --- End price verification ---
+      
+      // All medicines require a prescription - ensure files are present
+      if (!data.prescriptionFiles || data.prescriptionFiles.length === 0) {
+        return errorResponse(
+          "Prescription required",
+          "A valid doctor's prescription is required for all medicines. Please upload a prescription.",
+          400
+        );
+      }
 
       let rzpOrderId: string | undefined = undefined;
-      let initialStatus: OrderStatus = data.hasRx ? "under_review" : "processing";
       const isOnline = data.paymentMethod !== "cod";
+      const initialStatus: OrderStatus = isOnline ? "payment_pending" : "under_review";
 
       if (isOnline) {
-        initialStatus = "payment_pending";
         try {
           const rzp = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID!,
@@ -195,16 +204,33 @@ export const createOrderFn = createServerFn({ method: "POST" })
         }
       }
 
+      // Upload prescription files to Supabase Storage to keep Neon DB lightweight
+      const uploadedFiles = await Promise.all(
+        data.prescriptionFiles.map(async (file) => {
+          const publicUrl = await uploadPrescriptionToSupabase({
+            fileBase64: file.dataUrl,
+            fileName: file.name,
+            mimeType: file.mimeType,
+          });
+          return {
+            name: file.name,
+            mimeType: file.mimeType,
+            dataUrl: publicUrl,
+            aiExtractionResult: file.aiExtractionResult ?? null,
+          };
+        })
+      );
+
       const order = await db.order.create({
         data: {
           user: { connect: { id: session.id } },
           subtotal: serverSubtotal,
           delivery: serverDelivery,
           total: serverTotal,
-          hasRx: data.hasRx,
+          hasRx: true,
           paymentMethod: data.paymentMethod,
           status: initialStatus,
-          prescriptionStatus: data.hasRx ? "pending" : null,
+          prescriptionStatus: "pending",
           razorpayOrderId: rzpOrderId,
           address: {
             create: {
@@ -223,14 +249,9 @@ export const createOrderFn = createServerFn({ method: "POST" })
               prescriptionRequired: item.prescriptionRequired,
             }))
           },
-          prescriptionFiles: data.prescriptionFiles ? {
-            create: data.prescriptionFiles.map(file => ({
-              name: file.name,
-              mimeType: file.mimeType,
-              dataUrl: file.dataUrl,
-              aiExtractionResult: file.aiExtractionResult ?? null,
-            }))
-          } : undefined,
+          prescriptionFiles: {
+            create: uploadedFiles,
+          },
           itemVerifications: data.itemVerifications ? {
             create: data.itemVerifications.map(iv => ({
               medicineId: iv.medicineId,
@@ -247,10 +268,6 @@ export const createOrderFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
-
-      if (initialStatus === "processing") {
-        tryCreateShiprocketShipment(order.id).catch(console.error);
-      }
 
       return successResponse("Order created successfully", order, 201);
     } catch (error) {
@@ -360,7 +377,7 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
         data: {
           razorpayPaymentId: data.razorpayPaymentId,
           razorpaySignature: data.razorpaySignature,
-          status: "processing",
+          status: "under_review",
         },
         include: {
           items: true,
@@ -370,14 +387,6 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
-
-      // Maintain prescription state if needed
-      if (order.hasRx && order.prescriptionStatus === "pending") {
-        await db.order.update({
-          where: { id: data.orderId },
-          data: { status: "under_review" }
-        });
-      }
 
       if (!order.hasRx || order.prescriptionStatus === "verified") {
         tryCreateShiprocketShipment(order.id).catch(console.error);

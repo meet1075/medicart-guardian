@@ -46,6 +46,21 @@ function PaymentStep() {
       navigate({ to: "/cart", replace: true });
       return;
     }
+
+    // Prescription is strictly mandatory for all orders
+    try {
+      const rxRaw = window.localStorage.getItem(PRESCRIPTION_KEY);
+      const rxFiles = rxRaw ? JSON.parse(rxRaw) : [];
+      if (!rxFiles || rxFiles.length === 0) {
+        toast.error("Prescription is required before payment.");
+        navigate({ to: "/checkout/prescription", replace: true });
+        return;
+      }
+    } catch {
+      navigate({ to: "/checkout/prescription", replace: true });
+      return;
+    }
+
     try {
       const raw = window.localStorage.getItem(PENDING_ADDRESS);
       if (!raw) {
@@ -60,14 +75,20 @@ function PaymentStep() {
 
   async function placeOrder() {
     if (!address) return;
-    setPlacing(true);
+
     let files: PrescriptionFile[] = [];
-    if (cartHasRx) {
-      try {
-        const raw = window.localStorage.getItem(PRESCRIPTION_KEY);
-        if (raw) files = JSON.parse(raw);
-      } catch { /* ignore */ }
+    try {
+      const raw = window.localStorage.getItem(PRESCRIPTION_KEY);
+      if (raw) files = JSON.parse(raw);
+    } catch { /* ignore */ }
+
+    if (!files || files.length === 0) {
+      toast.error("Prescription is required to place an order.");
+      navigate({ to: "/checkout/prescription" });
+      return;
     }
+
+    setPlacing(true);
 
     const items = cart
       .map((c) => {
@@ -108,7 +129,7 @@ function PaymentStep() {
         subtotal,
         delivery,
         total: subtotal + delivery,
-        hasRx,
+        hasRx: true,
         paymentMethod: method,
         address: {
           fullName: address.fullName,
@@ -120,7 +141,7 @@ function PaymentStep() {
           pincode: address.pincode,
           type: address.type,
         },
-        prescriptionFiles: pfData.length > 0 ? pfData : undefined,
+        prescriptionFiles: pfData,
         itemVerifications: itemVerifications.length > 0 ? itemVerifications : undefined,
       });
 

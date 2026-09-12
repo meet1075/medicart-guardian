@@ -41,15 +41,11 @@ function PrescriptionStep() {
   }, [cart]);
 
   useEffect(() => {
-    // Skip this step for OTC-only carts
     if (cart.length === 0) {
       navigate({ to: "/cart", replace: true });
       return;
     }
-    if (!cartHasRx) {
-      navigate({ to: "/checkout/address", replace: true });
-    }
-  }, [cartHasRx, cart.length, navigate]);
+  }, [cart.length, navigate]);
 
   useEffect(() => {
     try {
