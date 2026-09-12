@@ -56,7 +56,22 @@ function AddressStep() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (cart.length === 0) navigate({ to: "/cart", replace: true });
+    if (cart.length === 0) {
+      navigate({ to: "/cart", replace: true });
+      return;
+    }
+
+    // Prescription is strictly mandatory for all orders
+    try {
+      const rxRaw = window.localStorage.getItem("medicart.pending-prescription.v1");
+      const rxFiles = rxRaw ? JSON.parse(rxRaw) : [];
+      if (!rxFiles || rxFiles.length === 0) {
+        toast.error("Please upload your prescription before proceeding to address.");
+        navigate({ to: "/checkout/prescription", replace: true });
+      }
+    } catch {
+      navigate({ to: "/checkout/prescription", replace: true });
+    }
   }, [cart.length, navigate]);
 
 

@@ -53,3 +53,54 @@ export const uploadMedicineImageFn = createServerFn({ method: "POST" })
 
     return { publicUrl: urlData.publicUrl };
   });
+
+export async function uploadPrescriptionToSupabase({
+  fileBase64,
+  fileName,
+  mimeType,
+}: {
+  fileBase64: string;
+  fileName: string;
+  mimeType: string;
+}): Promise<string> {
+  // If already a URL (e.g. from past prescription or already uploaded), return as is
+  if (fileBase64.startsWith("http://") || fileBase64.startsWith("https://")) {
+    return fileBase64;
+  }
+
+  try {
+    const supabase = getSupabase();
+    const bucket = "prescriptions";
+
+    // Decode base64 → Buffer
+    const base64Data = fileBase64.replace(/^data:[^;]+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+
+    const rawExt = fileName.split(".").pop()?.toLowerCase() ?? (mimeType.includes("pdf") ? "pdf" : "jpg");
+    const uniqueId = crypto.randomUUID();
+    const path = `${uniqueId}.${rawExt}`;
+
+    const contentType = mimeType || (rawExt === "pdf" ? "application/pdf" : `image/${rawExt}`);
+
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(path, buffer, {
+        contentType,
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("[uploadPrescriptionToSupabase] Supabase upload failed:", error.message);
+      return fileBase64;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(path);
+
+    return urlData.publicUrl;
+  } catch (err) {
+    console.error("[uploadPrescriptionToSupabase] Error uploading to Supabase:", err);
+    return fileBase64;
+  }
+}
