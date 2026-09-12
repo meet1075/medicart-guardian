@@ -8,7 +8,7 @@ export const Route = createFileRoute("/admin/dashboard/orders/")({
   component: OrdersPage,
 });
 
-type Filter = "all" | "rx" | "otc" | "pending" | "verified" | "rejected";
+type Filter = "all" | "pending" | "verified" | "rejected" | "payment_cancelled";
 type DateFilter = "all" | "today" | "week" | "month";
 
 function OrdersPage() {
@@ -21,11 +21,15 @@ function OrdersPage() {
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
-      if (filter === "rx" && !o.hasRx) return false;
-      if (filter === "otc" && o.hasRx) return false;
-      if (filter === "pending" && !(o.hasRx && o.prescriptionStatus === "pending")) return false;
-      if (filter === "verified" && o.prescriptionStatus !== "verified") return false;
-      if (filter === "rejected" && o.prescriptionStatus !== "rejected") return false;
+      const isCancelledOrPending =
+        o.status === "payment_cancelled" ||
+        o.status === "payment_pending" ||
+        o.status === "cancelled";
+
+      if (filter === "pending" && (isCancelledOrPending || !o.hasRx || o.prescriptionStatus !== "pending")) return false;
+      if (filter === "verified" && (isCancelledOrPending || o.prescriptionStatus !== "verified")) return false;
+      if (filter === "rejected" && (isCancelledOrPending || o.prescriptionStatus !== "rejected")) return false;
+      if (filter === "payment_cancelled" && o.status !== "payment_cancelled") return false;
 
       if (dateFilter !== "all") {
         const d = new Date(o.createdAt).getTime();
@@ -57,22 +61,48 @@ function OrdersPage() {
     });
   }, [orders, filter, q, dateFilter, medicineQ]);
 
+  const paidStats = useMemo(() => {
+    let revenue = 0;
+    let paidCount = 0;
+    filtered.forEach((o) => {
+      const isExcluded =
+        o.status === "cancelled" ||
+        o.status === "payment_cancelled" ||
+        o.status === "payment_pending" ||
+        o.status === "rejected" ||
+        o.prescriptionStatus === "rejected";
+
+      if (isExcluded) return;
+
+      revenue += o.total;
+      paidCount++;
+    });
+    return { revenue, paidCount };
+  }, [filtered]);
+
   return (
     <div className="flex h-full flex-col pb-6">
       <div className="shrink-0 pb-4">
         <h1 className="text-2xl font-bold">Orders</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{filtered.length} orders</p>
+        <p className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-2">
+          <span>{filtered.length} total orders</span>
+          <span>·</span>
+          <span>
+            Successful Revenue:{" "}
+            <strong className="text-foreground font-semibold">₹{paidStats.revenue.toFixed(2)}</strong>{" "}
+            <span className="text-xs">({paidStats.paidCount} paid)</span>
+          </span>
+        </p>
 
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
             {(
               [
                 ["all", "All"],
-                ["rx", "Rx orders"],
-                ["otc", "OTC orders"],
                 ["pending", "Pending verification"],
                 ["verified", "Verified"],
                 ["rejected", "Rejected"],
+                ["payment_cancelled", "Payment Cancelled"],
               ] as [Filter, string][]
             ).map(([k, label]) => (
               <button
@@ -129,9 +159,8 @@ function OrdersPage() {
               <th className="px-4 py-3">Customer</th>
               <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3">Items</th>
-              <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Delivery</th>
+              <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Rx status</th>
             </tr>
           </thead>
@@ -165,23 +194,28 @@ function OrdersPage() {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{o.address.phone}</td>
                 <td className="px-4 py-3">{o.items.length}</td>
-                <td className="px-4 py-3">
-                  {o.hasRx ? (
-                    <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
-                      Rx
+                <td className="px-4 py-3 font-semibold">₹{o.total.toFixed(2)}</td>
+                <td className="px-4 py-3 text-xs">
+                  {o.status === "payment_cancelled" ? (
+                    <span className="inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                      Payment Cancelled
+                    </span>
+                  ) : o.status === "payment_pending" ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+                      Payment Pending
+                    </span>
+                  ) : o.status === "cancelled" ? (
+                    <span className="inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                      Cancelled
                     </span>
                   ) : (
-                    <span className="rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">
-                      OTC
-                    </span>
+                    <span className="uppercase text-muted-foreground">{o.status.replace(/_/g, " ")}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 font-semibold">₹{o.total.toFixed(2)}</td>
-                <td className="px-4 py-3 text-xs uppercase text-muted-foreground">
-                  {o.status.replace("_", " ")}
-                </td>
                 <td className="px-4 py-3">
-                  {o.hasRx ? (
+                  {o.status === "payment_cancelled" ? (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  ) : o.hasRx ? (
                     <StatusPill status={o.status} rx={o.prescriptionStatus as any} />
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>

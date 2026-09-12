@@ -77,12 +77,15 @@ export interface ItemVerification {
 
 export type OrderStatus =
   | "placed"
+  | "payment_pending"
+  | "payment_cancelled"
   | "under_review"
   | "verified"
   | "action_needed"
   | "processing"
   | "shipped"
-  | "delivered";
+  | "delivered"
+  | "cancelled";
 
 export type PrescriptionStatus = "pending" | "verified" | "rejected";
 

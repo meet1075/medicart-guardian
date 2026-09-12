@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useOrders } from "@/hooks/use-orders";
+import { useOrders, useOrder } from "@/hooks/use-orders";
 import { useShiprocket } from "@/hooks/use-shiprocket";
 import {
   ArrowLeft,
@@ -27,17 +27,28 @@ function OrderDetailsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { orders, updateOrderStatus, toggleItemVerification, isUpdating } = useOrders();
+  const { data: singleOrder, isLoading: isSingleLoading } = useOrder(id);
   const [rejectMode, setRejectMode] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  const order = orders.find((o) => o.id === id);
+  const order = orders.find((o) => o.id === id) || singleOrder;
+
+  if (isSingleLoading && !order) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse text-sm text-muted-foreground">Loading order details…</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center p-8">
         <div className="text-center">
-          <div className="text-muted-foreground mb-4">Order not found or loading...</div>
+          <div className="text-muted-foreground mb-4">Order not found</div>
           <button
             onClick={() => navigate({ to: "/admin/dashboard/orders" })}
             className="text-primary hover:underline font-semibold"
@@ -49,9 +60,10 @@ function OrderDetailsPage() {
     );
   }
 
+  const verifications = order.itemVerifications || [];
   const allReviewed =
-    order.itemVerifications.length > 0 &&
-    order.itemVerifications.every((v: any) => v.pharmacistApproved);
+    verifications.length > 0 &&
+    verifications.every((v: any) => v.pharmacistApproved);
 
   async function approve() {
     await updateOrderStatus({
@@ -99,13 +111,37 @@ function OrderDetailsPage() {
           </div>
         </div>
 
+        {order.status === "payment_cancelled" && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+            <XCircle size={22} className="shrink-0" />
+            <div>
+              <div className="font-bold text-sm">Payment Cancelled</div>
+              <div className="text-xs text-destructive/80 mt-0.5">
+                The customer cancelled or failed the online payment for this order. No payment was captured.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {order.status === "payment_pending" && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-600">
+            <Clock size={22} className="shrink-0" />
+            <div>
+              <div className="font-bold text-sm">Payment Pending</div>
+              <div className="text-xs text-amber-600/80 mt-0.5">
+                The customer initiated an online order, but payment has not yet been confirmed by Razorpay.
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-3">
           {/* Left Column: Details & Items */}
           <div className="md:col-span-2 space-y-6">
             <div className="rounded-xl border border-border bg-surface p-6">
               <h2 className="text-lg font-bold mb-4">Order Items</h2>
               <div className="divide-y divide-border border border-border rounded-lg overflow-hidden">
-                {order.items.map((i: any) => (
+                {(order.items || []).map((i: any) => (
                   <div
                     key={i.medicineId}
                     className="flex items-center justify-between p-4 bg-background"
@@ -129,7 +165,7 @@ function OrderDetailsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="font-bold text-sm">₹{(i.price * i.qty).toFixed(2)}</div>
+                    <div className="font-bold text-sm">₹{((i.price || 0) * (i.qty || 1)).toFixed(2)}</div>
                   </div>
                 ))}
               </div>
@@ -138,15 +174,15 @@ function OrderDetailsPage() {
                 <div className="w-full max-w-xs space-y-3 text-sm">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>₹{order.subtotal.toFixed(2)}</span>
+                    <span>₹{(order.subtotal || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>Delivery</span>
-                    <span>₹{order.delivery.toFixed(2)}</span>
+                    <span>₹{(order.delivery || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t border-border pt-3">
                     <span>Total</span>
-                    <span>₹{order.total.toFixed(2)}</span>
+                    <span>₹{(order.total || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -156,7 +192,7 @@ function OrderDetailsPage() {
               <div className="rounded-xl border border-border bg-surface p-6">
                 <h2 className="text-lg font-bold mb-4">Uploaded Prescriptions</h2>
                 <div className="space-y-4">
-                  {order.prescriptionFiles.map((f: any, idx: number) => (
+                  {(order.prescriptionFiles || []).map((f: any, idx: number) => (
                     <div key={f.id} className="rounded-lg border border-border bg-background p-4">
                       <div className="text-sm font-semibold mb-3">
                         File {idx + 1} — {f.name}
@@ -172,7 +208,7 @@ function OrderDetailsPage() {
                               </div>
                             </div>
                           </div>
-                        ) : f.mimeType.startsWith("image/") ? (
+                        ) : (f.mimeType && f.mimeType.startsWith("image/")) ? (
                           <button
                             type="button"
                             onClick={() => setLightboxUrl(f.dataUrl)}
@@ -243,24 +279,30 @@ function OrderDetailsPage() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
                 Customer Details
               </h2>
-              <div className="font-semibold text-base">{order.address.fullName}</div>
-              {(order as any).user && (
-                <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
-                    {(order as any).user.name}
-                  </span>
-                  <span>{(order as any).user.email}</span>
-                </div>
+              {order.address ? (
+                <>
+                  <div className="font-semibold text-base">{order.address.fullName || "—"}</div>
+                  {(order as any).user && (
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                        {(order as any).user.name}
+                      </span>
+                      <span>{(order as any).user.email}</span>
+                    </div>
+                  )}
+                  <div className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                    {order.address.line1}
+                    {order.address.line2 ? `, ${order.address.line2}` : ""}
+                    <br />
+                    {order.address.city}, {order.address.state} — {order.address.pincode}
+                  </div>
+                  <div className="text-sm font-semibold mt-3 text-foreground/80">
+                    Phone: {order.address.phone}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">No address attached</div>
               )}
-              <div className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                {order.address.line1}
-                {order.address.line2 ? `, ${order.address.line2}` : ""}
-                <br />
-                {order.address.city}, {order.address.state} — {order.address.pincode}
-              </div>
-              <div className="text-sm font-semibold mt-3 text-foreground/80">
-                Phone: {order.address.phone}
-              </div>
             </div>
 
             <div className="rounded-xl border border-border bg-surface p-6">
@@ -271,15 +313,26 @@ function OrderDetailsPage() {
               <div className="mb-6">
                 <div className="text-xs text-muted-foreground mb-1">Payment Method</div>
                 <div className="font-semibold uppercase">{order.paymentMethod}</div>
+                {order.status === "payment_cancelled" && (
+                  <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                    Payment Cancelled
+                  </span>
+                )}
+                {order.status === "payment_pending" && (
+                  <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+                    Payment Pending
+                  </span>
+                )}
+                {order.razorpayPaymentId && (
+                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">
+                    ID: {order.razorpayPaymentId}
+                  </div>
+                )}
               </div>
 
               <div className="mb-6">
                 <div className="text-xs text-muted-foreground mb-1">Rx Status</div>
-                {order.hasRx ? (
-                  <StatusPill status={order.status} rx={order.prescriptionStatus as any} />
-                ) : (
-                  <span className="text-sm font-semibold text-success">OTC - Not Required</span>
-                )}
+                <StatusPill status={order.status} rx={order.prescriptionStatus as any} />
               </div>
 
               <div className="border-t border-border pt-4">
@@ -290,10 +343,13 @@ function OrderDetailsPage() {
                   disabled={isUpdating}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-semibold outline-none focus:border-primary disabled:opacity-50 transition-colors"
                 >
+                  <option value="payment_pending">Payment Pending</option>
+                  <option value="payment_cancelled">Payment Cancelled</option>
                   <option value="placed">Placed</option>
                   <option value="processing">Processing</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
                   <option value="action_needed" disabled>
                     Action Needed
                   </option>
@@ -313,8 +369,8 @@ function OrderDetailsPage() {
                 </h2>
 
                 <div className="space-y-3 mb-6">
-                  {order.itemVerifications.map((v: any) => {
-                    const item = order.items.find((i: any) => i.medicineId === v.medicineId);
+                  {(order.itemVerifications || []).map((v: any) => {
+                    const item = (order.items || []).find((i: any) => i.medicineId === v.medicineId);
                     if (!item) return null;
                     return (
                       <div

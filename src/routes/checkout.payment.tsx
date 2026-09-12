@@ -34,7 +34,7 @@ export const Route = createFileRoute("/checkout/payment")({
 
 function PaymentStep() {
   const { cart, cartHasRx, clearCart } = useStore();
-  const { createOrder: submitOrder, verifyPayment } = useOrders();
+  const { createOrder: submitOrder, verifyPayment, cancelOrderPayment } = useOrders();
   const { medicines } = useMedicines();
   const navigate = useNavigate();
   const [method] = useState<Order["paymentMethod"]>("upi");
@@ -159,14 +159,31 @@ function PaymentStep() {
           },
           theme: { color: "#2563eb" },
           modal: {
-            ondismiss: function () {
+            ondismiss: async function () {
               setPlacing(false);
+              try {
+                await cancelOrderPayment({
+                  orderId: order.id,
+                  reason: "Payment cancelled by customer",
+                });
+              } catch (e) {
+                console.error("Failed to mark order as payment cancelled:", e);
+              }
+              toast.error("Payment cancelled. Order marked as payment cancelled.");
             },
           },
         };
         const rzp = new (window as any).Razorpay(options);
-        rzp.on("payment.failed", function (response: any) {
-          toast.error(response.error.description || "Payment failed");
+        rzp.on("payment.failed", async function (response: any) {
+          try {
+            await cancelOrderPayment({
+              orderId: order.id,
+              reason: response.error?.description || "Payment failed",
+            });
+          } catch (e) {
+            console.error("Failed to mark order as payment cancelled:", e);
+          }
+          toast.error(response.error?.description || "Payment failed");
           setPlacing(false);
         });
         rzp.open();

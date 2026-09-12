@@ -9,6 +9,7 @@ import { tryCreateShiprocketShipment } from "./shiprocket.api";
 
 const VALID_ORDER_STATUSES = [
   "payment_pending",
+  "payment_cancelled",
   "under_review",
   "action_needed",
   "processing",
@@ -388,3 +389,50 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
       return errorResponse("Payment verification error", (error as Error).message);
     }
   });
+
+export const cancelOrderPaymentFn = createServerFn({ method: "POST" })
+  .validator(z.object({
+    orderId: z.string(),
+    reason: z.string().optional(),
+  }))
+  .handler(async ({ data }): Promise<ApiResponse> => {
+    try {
+      const session = await getUserSession();
+      if (!session) return errorResponse("Unauthorized", "Please log in", 401);
+
+      const existingOrder = await db.order.findUnique({
+        where: { id: data.orderId },
+        select: { userId: true, status: true, razorpayPaymentId: true },
+      });
+      if (!existingOrder) return errorResponse("Order not found", undefined, 404);
+      if (existingOrder.userId !== session.id && session.role !== "ADMIN") {
+        return errorResponse("Forbidden", undefined, 403);
+      }
+
+      // If already paid, do not mark as cancelled
+      if (existingOrder.razorpayPaymentId) {
+        return errorResponse("Cannot cancel", "Payment has already been completed", 400);
+      }
+
+      const order = await db.order.update({
+        where: { id: data.orderId },
+        data: {
+          status: "payment_cancelled",
+          rejectReason: data.reason || "Payment cancelled by user",
+        },
+        include: {
+          items: true,
+          prescriptionFiles: true,
+          itemVerifications: true,
+          address: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
+      });
+
+      return successResponse("Order marked as payment cancelled", order);
+    } catch (error) {
+      console.error("Failed to cancel order payment:", error);
+      return errorResponse("Failed to cancel order payment", (error as Error).message);
+    }
+  });
+

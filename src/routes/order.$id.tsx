@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PublicLayout } from "@/components/PublicLayout";
 import { useOrder, type FullOrder } from "@/hooks/use-orders";
 import type { OrderStatus } from "@/lib/types";
-import { AlertTriangle, CheckCircle2, Clock, Package, Truck, Home, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Package, Truck, Home, ShieldCheck, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/order/$id")({
   head: () => ({
@@ -136,25 +136,50 @@ function OrderPage() {
 function ConfirmationBanner({ order }: { order: FullOrder }) {
   const isRxPending = order.hasRx && order.prescriptionStatus === "pending";
   const isRejected = order.prescriptionStatus === "rejected";
+  const isPaymentCancelled = order.status === "payment_cancelled";
+  const isPaymentPending = order.status === "payment_pending";
+  const isCancelled = order.status === "cancelled";
 
-  const tone = isRejected
+  const tone = (isPaymentCancelled || isCancelled || isRejected)
     ? "border-destructive/40 bg-destructive/10 text-destructive"
+    : isPaymentPending
+    ? "border-amber-500/40 bg-amber-500/10 text-amber-600"
     : "border-success/40 bg-success/10 text-success";
 
   return (
     <div className={`rounded-2xl border p-6 ${tone}`}>
       <div className="flex items-center gap-3">
-        {isRejected ? <AlertTriangle size={22} /> : <CheckCircle2 size={22} />}
+        {(isPaymentCancelled || isCancelled) ? (
+          <XCircle size={22} />
+        ) : isPaymentPending ? (
+          <Clock size={22} />
+        ) : isRejected ? (
+          <AlertTriangle size={22} />
+        ) : (
+          <CheckCircle2 size={22} />
+        )}
         <div>
           <div className="text-lg font-bold text-foreground">
-            {isRejected
+            {isPaymentCancelled
+              ? "Payment Cancelled"
+              : isCancelled
+              ? "Order Cancelled"
+              : isPaymentPending
+              ? "Payment Pending"
+              : isRejected
               ? "Action needed on your order"
               : isRxPending
               ? "Order placed — awaiting prescription verification"
               : "Order placed — processing"}
           </div>
           <p className="mt-1 text-sm text-foreground/80">
-            {isRejected
+            {isPaymentCancelled
+              ? "The payment for this order was cancelled or failed. No payment was charged, and this order will not be processed."
+              : isCancelled
+              ? "This order has been cancelled."
+              : isPaymentPending
+              ? "Payment has not yet been confirmed for this order."
+              : isRejected
               ? "Please review the note below and re-upload your prescription."
               : isRxPending
               ? "Our licensed pharmacist is reviewing your prescription. You'll be notified once it's verified, and your order will then be processed for shipping."
@@ -168,15 +193,36 @@ function ConfirmationBanner({ order }: { order: FullOrder }) {
 
 const STEP_LABEL: Record<OrderStatus, string> = {
   placed: "Placed",
+  payment_pending: "Payment Pending",
+  payment_cancelled: "Payment Cancelled",
   under_review: "Prescription Under Review",
   verified: "Prescription Verified",
   action_needed: "Action Needed",
   processing: "Processing",
   shipped: "Shipped",
   delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
 function Timeline({ order }: { order: FullOrder }) {
+  if (order.status === "payment_cancelled" || order.status === "cancelled") {
+    return (
+      <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+        <div className="flex items-center gap-3 text-destructive">
+          <XCircle size={22} />
+          <div>
+            <div className="font-bold text-sm">Order Cancelled</div>
+            <div className="text-xs text-destructive/80 mt-0.5">
+              {order.status === "payment_cancelled"
+                ? "Payment was cancelled. This order will not be fulfilled."
+                : "This order has been cancelled."}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const rxSteps: OrderStatus[] = order.hasRx
     ? order.prescriptionStatus === "rejected"
       ? ["placed", "under_review", "action_needed"]
@@ -285,6 +331,11 @@ function iconFor(s: OrderStatus) {
   switch (s) {
     case "placed":
       return CheckCircle2;
+    case "payment_pending":
+      return Clock;
+    case "payment_cancelled":
+    case "cancelled":
+      return XCircle;
     case "under_review":
       return Clock;
     case "verified":

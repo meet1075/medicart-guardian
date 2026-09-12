@@ -37,12 +37,29 @@ function Overview() {
 
     return {
       today: orders.filter((o) => isToday(new Date(o.createdAt).getTime())).length,
-      pending: orders.filter((o) => o.hasRx && o.prescriptionStatus === "pending").length,
+      pending: orders.filter(
+        (o) =>
+          o.hasRx &&
+          o.prescriptionStatus === "pending" &&
+          o.status !== "payment_cancelled" &&
+          o.status !== "payment_pending" &&
+          o.status !== "cancelled",
+      ).length,
       approved: orders.filter(
-        (o) => o.prescriptionStatus === "verified" && o.reviewedAt && isToday(new Date(o.reviewedAt).getTime()),
+        (o) =>
+          o.prescriptionStatus === "verified" &&
+          o.reviewedAt &&
+          isToday(new Date(o.reviewedAt).getTime()) &&
+          o.status !== "payment_cancelled" &&
+          o.status !== "cancelled",
       ).length,
       rejected: orders.filter(
-        (o) => o.prescriptionStatus === "rejected" && o.reviewedAt && isToday(new Date(o.reviewedAt).getTime()),
+        (o) =>
+          o.prescriptionStatus === "rejected" &&
+          o.reviewedAt &&
+          isToday(new Date(o.reviewedAt).getTime()) &&
+          o.status !== "payment_cancelled" &&
+          o.status !== "cancelled",
       ).length,
     };
   }, [orders]);
@@ -51,16 +68,33 @@ function Overview() {
     let total = 0;
     let upi = 0;
     let card = 0;
+    let paidCount = 0;
+    let upiCount = 0;
+    let cardCount = 0;
     
     orders.forEach(o => {
-      if (o.prescriptionStatus !== "rejected" && o.status !== "rejected") {
-        total += o.total;
-        if (o.paymentMethod === "upi") upi += o.total;
-        else if (o.paymentMethod === "card") card += o.total;
+      // Must not be cancelled, rejected, or pending
+      const isExcluded =
+        o.status === "cancelled" ||
+        o.status === "payment_cancelled" ||
+        o.status === "payment_pending" ||
+        o.status === "rejected" ||
+        o.prescriptionStatus === "rejected";
+
+      if (isExcluded) return;
+
+      paidCount++;
+      total += o.total;
+      if (o.paymentMethod === "card") {
+        card += o.total;
+        cardCount++;
+      } else {
+        upi += o.total;
+        upiCount++;
       }
     });
 
-    return { total, upi, card };
+    return { total, upi, card, paidCount, upiCount, cardCount };
   }, [orders]);
 
   const recent = orders.slice(0, 5);
@@ -81,11 +115,32 @@ function Overview() {
         </div>
 
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Revenue Insights (All-Time)</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Revenue Insights (All-Time)</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Calculated strictly from verified successful payments ({revenueStats.paidCount} paid orders).
+            </p>
+          </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total Revenue" value={`₹${revenueStats.total.toFixed(2)}`} icon={<DollarSign size={18} />} tone="success" />
-            <StatCard label="UPI" value={`₹${revenueStats.upi.toFixed(2)}`} icon={<Smartphone size={18} />} />
-            <StatCard label="Card / Netbanking" value={`₹${revenueStats.card.toFixed(2)}`} icon={<CreditCard size={18} />} />
+            <StatCard
+              label="Total Revenue"
+              value={`₹${revenueStats.total.toFixed(2)}`}
+              sublabel={`${revenueStats.paidCount} paid orders`}
+              icon={<DollarSign size={18} />}
+              tone="success"
+            />
+            <StatCard
+              label="UPI"
+              value={`₹${revenueStats.upi.toFixed(2)}`}
+              sublabel={`${revenueStats.upiCount} paid orders`}
+              icon={<Smartphone size={18} />}
+            />
+            <StatCard
+              label="Card / Netbanking"
+              value={`₹${revenueStats.card.toFixed(2)}`}
+              sublabel={`${revenueStats.cardCount} paid orders`}
+              icon={<CreditCard size={18} />}
+            />
           </div>
         </section>
       </div>
@@ -145,11 +200,13 @@ function Overview() {
 function StatCard({
   label,
   value,
+  sublabel,
   icon,
   tone,
 }: {
   label: string;
   value: number | string;
+  sublabel?: string;
   icon: React.ReactNode;
   tone?: "warning" | "success" | "destructive";
 }) {
@@ -170,6 +227,9 @@ function StatCard({
       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
+      {sublabel && (
+        <div className="mt-1 text-xs text-muted-foreground font-medium">{sublabel}</div>
+      )}
     </div>
   );
 }
@@ -181,6 +241,27 @@ export function StatusPill({
   status: string;
   rx?: "pending" | "verified" | "rejected";
 }) {
+  if (status === "payment_cancelled") {
+    return (
+      <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+        Payment Cancelled
+      </span>
+    );
+  }
+  if (status === "payment_pending") {
+    return (
+      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+        Payment Pending
+      </span>
+    );
+  }
+  if (status === "cancelled") {
+    return (
+      <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+        Cancelled
+      </span>
+    );
+  }
   if (rx === "pending")
     return (
       <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
@@ -201,7 +282,7 @@ export function StatusPill({
     );
   return (
     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-      {status.replace("_", " ")}
+      {status.replace(/_/g, " ")}
     </span>
   );
 }
