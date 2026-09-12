@@ -22,7 +22,13 @@ function PrescriptionsListPage() {
   const { orders } = useOrders();
   const rxOrders = useMemo(() => {
     return orders
-      .filter((o) => o.hasRx)
+      .filter(
+        (o) =>
+          o.hasRx &&
+          o.status !== "payment_cancelled" &&
+          o.status !== "payment_pending" &&
+          o.status !== "cancelled",
+      )
       .sort((a, b) => {
         const pa = a.prescriptionStatus === "pending" ? 0 : 1;
         const pb = b.prescriptionStatus === "pending" ? 0 : 1;

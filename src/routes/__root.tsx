@@ -70,6 +70,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Go home
           </a>
         </div>
+        {import.meta.env.DEV && error && (
+          <div className="mt-6 text-left p-4 rounded bg-destructive/10 border border-destructive/20 text-xs font-mono text-destructive max-h-60 overflow-auto">
+            <div className="font-bold mb-1">{error.message || String(error)}</div>
+            <pre className="whitespace-pre-wrap">{error.stack}</pre>
+          </div>
+        )}
       </div>
     </div>
   );
