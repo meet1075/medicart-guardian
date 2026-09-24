@@ -5,6 +5,8 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { auth } from "./lib/auth";
 
+import { handleRazorpayWebhook } from "./api/webhooks/razorpay";
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -52,6 +54,10 @@ export default {
       const url = new URL(request.url);
       if (url.pathname.startsWith("/api/auth/")) {
         return auth.handler(request);
+      }
+
+      if (url.pathname === "/api/webhooks/razorpay" && request.method === "POST") {
+        return handleRazorpayWebhook(request);
       }
       
       const handler = await getServerEntry();
