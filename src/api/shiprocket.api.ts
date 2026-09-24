@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getUserSession } from "@/api/auth.server";
 import { errorResponse, successResponse, type ApiResponse } from "@/lib/api";
 import { createShiprocketOrder, generateAWB, schedulePickup, cancelShipment } from "./shiprocket.service";
+import { sendCustomerTrackingEmail } from "@/lib/email.service";
 
 /**
  * Internal utility to attempt creating a Shiprocket shipment.
@@ -44,7 +45,7 @@ export async function tryCreateShiprocketShipment(orderId: string) {
       console.warn("AWB auto-generation failed, will need manual generation:", awbErr);
     }
 
-    await db.order.update({
+    const updatedOrder = await db.order.update({
       where: { id: orderId },
       data: {
         isShipmentCreated: true,
@@ -54,7 +55,18 @@ export async function tryCreateShiprocketShipment(orderId: string) {
         shipmentError: null,
         ...(awbCode && { awbCode, courierName, trackingUrl }),
       },
+      include: {
+        items: true,
+        address: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
     });
+
+    if (awbCode) {
+      sendCustomerTrackingEmail(updatedOrder).catch((err) =>
+        console.error("[EmailService] Failed to send tracking email:", err)
+      );
+    }
   } catch (error: any) {
     console.error("Failed to sync order to Shiprocket:", error);
     await db.order.update({
@@ -108,7 +120,18 @@ export const generateShipmentAwbFn = createServerFn({ method: "POST" })
           awbCode: awbResponse.awb_code,
           courierName: awbResponse.courier_name,
         },
+        include: {
+          items: true,
+          address: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
       });
+
+      if (awbResponse.awb_code) {
+        sendCustomerTrackingEmail(order).catch((err) =>
+          console.error("[EmailService] Failed to send tracking email from generateShipmentAwbFn:", err)
+        );
+      }
 
       return successResponse("AWB generated successfully", order);
     } catch (error) {

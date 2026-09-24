@@ -7,6 +7,12 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { tryCreateShiprocketShipment } from "./shiprocket.api";
 import { uploadPrescriptionToSupabase } from "./upload";
+import {
+  sendAdminNewOrderAlert,
+  sendCustomerOrderConfirmationEmail,
+  sendCustomerRxApprovedEmail,
+  sendCustomerRxRejectedEmail,
+} from "@/lib/email.service";
 
 const VALID_ORDER_STATUSES = [
   "payment_pending",
@@ -269,6 +275,16 @@ export const createOrderFn = createServerFn({ method: "POST" })
         }
       });
 
+      // For COD orders, payment is agreed upon delivery and order is immediately under_review
+      if (!isOnline) {
+        sendAdminNewOrderAlert(order).catch((err) =>
+          console.error("[EmailService] Failed to send admin COD order alert:", err)
+        );
+        sendCustomerOrderConfirmationEmail(order).catch((err) =>
+          console.error("[EmailService] Failed to send customer COD order email:", err)
+        );
+      }
+
       return successResponse("Order created successfully", order, 201);
     } catch (error) {
       const err = error as Error;
@@ -290,6 +306,11 @@ export const updateOrderStatusFn = createServerFn({ method: "POST" })
       const session = await getUserSession();
       if (!session || session.role !== "ADMIN") return errorResponse("Forbidden", undefined, 403);
 
+      const previousOrder = await db.order.findUnique({
+        where: { id: data.orderId },
+        select: { prescriptionStatus: true },
+      });
+
       const order = await db.order.update({
         where: { id: data.orderId },
         data: {
@@ -307,6 +328,26 @@ export const updateOrderStatusFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
+
+      // State transition guard: Customer Rx Approval Email (only on transition to "verified")
+      if (
+        previousOrder?.prescriptionStatus !== "verified" &&
+        data.prescriptionStatus === "verified"
+      ) {
+        sendCustomerRxApprovedEmail(order).catch((err) =>
+          console.error("[EmailService] Failed to send customer Rx approval email:", err)
+        );
+      }
+
+      // State transition guard: Customer Rx Rejection Email (only on transition to "rejected")
+      if (
+        previousOrder?.prescriptionStatus !== "rejected" &&
+        data.prescriptionStatus === "rejected"
+      ) {
+        sendCustomerRxRejectedEmail(order, data.rejectReason).catch((err) =>
+          console.error("[EmailService] Failed to send customer Rx rejection email:", err)
+        );
+      }
 
       if (data.status === "processing") {
         tryCreateShiprocketShipment(order.id).catch(console.error);
@@ -352,7 +393,7 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
       // IDOR check: ensure the order belongs to this user
       const existingOrder = await db.order.findUnique({
         where: { id: data.orderId },
-        select: { userId: true, razorpayOrderId: true },
+        select: { userId: true, razorpayOrderId: true, status: true },
       });
       if (!existingOrder) return errorResponse("Order not found", undefined, 404);
       if (existingOrder.userId !== session.id) {
@@ -372,13 +413,32 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
         return errorResponse("Payment verification failed", "Invalid signature", 400);
       }
 
-      const order = await db.order.update({
-        where: { id: data.orderId },
+      // Atomic transition: updates if current status is "payment_pending" or recovered from "payment_cancelled"
+      const transitionResult = await db.order.updateMany({
+        where: {
+          id: data.orderId,
+          status: { in: ["payment_pending", "payment_cancelled"] },
+        },
         data: {
           razorpayPaymentId: data.razorpayPaymentId,
           razorpaySignature: data.razorpaySignature,
           status: "under_review",
         },
+      });
+
+      // If webhook already transitioned status, ensure payment IDs are saved
+      if (transitionResult.count === 0) {
+        await db.order.update({
+          where: { id: data.orderId },
+          data: {
+            razorpayPaymentId: data.razorpayPaymentId,
+            razorpaySignature: data.razorpaySignature,
+          },
+        });
+      }
+
+      const order = await db.order.findUnique({
+        where: { id: data.orderId },
         include: {
           items: true,
           prescriptionFiles: true,
@@ -387,6 +447,18 @@ export const verifyPaymentFn = createServerFn({ method: "POST" })
           user: { select: { id: true, name: true, email: true } },
         }
       });
+
+      if (!order) return errorResponse("Order not found after update", undefined, 404);
+
+      // ONLY send email if THIS request was the one that atomically transitioned from payment_pending
+      if (transitionResult.count > 0) {
+        sendAdminNewOrderAlert(order).catch((err) =>
+          console.error("[EmailService] Failed to send admin order alert:", err)
+        );
+        sendCustomerOrderConfirmationEmail(order).catch((err) =>
+          console.error("[EmailService] Failed to send customer order confirmation email:", err)
+        );
+      }
 
       if (!order.hasRx || order.prescriptionStatus === "verified") {
         tryCreateShiprocketShipment(order.id).catch(console.error);
