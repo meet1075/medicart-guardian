@@ -112,13 +112,19 @@ function OrderDetailsPage() {
         </div>
 
         {order.status === "payment_cancelled" && (
-          <div className="mb-6 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
-            <XCircle size={22} className="shrink-0" />
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+            <XCircle size={22} className="shrink-0 mt-0.5" />
             <div>
               <div className="font-bold text-sm">Payment Cancelled</div>
               <div className="text-xs text-destructive/80 mt-0.5">
                 The customer cancelled or failed the online payment for this order. No payment was captured.
               </div>
+              {order.rejectReason && (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-background/80 px-2.5 py-1 text-xs text-destructive">
+                  <span className="font-bold">Cancellation Reason:</span>
+                  <span className="font-medium text-foreground">{order.rejectReason}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -312,21 +318,43 @@ function OrderDetailsPage() {
 
               <div className="mb-6">
                 <div className="text-xs text-muted-foreground mb-1">Payment Method</div>
-                <div className="font-semibold uppercase">{order.paymentMethod}</div>
+                {order.paymentMethod === "cod" ? (
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-700">
+                      💵 Cash on Delivery (COD)
+                    </span>
+                    <div className="mt-1.5 text-xs text-muted-foreground">
+                      Collect on delivery: <strong className="text-foreground">₹{(order.total || 0).toFixed(2)}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-xs font-bold text-success">
+                      💳 Paid Online (Razorpay)
+                    </span>
+                    {order.razorpayPaymentId && (
+                      <div className="mt-1 font-mono text-[11px] text-muted-foreground">
+                        ID: {order.razorpayPaymentId}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {order.status === "payment_cancelled" && (
-                  <span className="mt-1 inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
-                    Payment Cancelled
-                  </span>
+                  <div className="mt-1">
+                    <span className="inline-block rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                      Payment Cancelled
+                    </span>
+                    {order.rejectReason && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        <span className="font-semibold text-destructive">Reason:</span> {order.rejectReason}
+                      </div>
+                    )}
+                  </div>
                 )}
                 {order.status === "payment_pending" && (
                   <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
                     Payment Pending
                   </span>
-                )}
-                {order.razorpayPaymentId && (
-                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">
-                    ID: {order.razorpayPaymentId}
-                  </div>
                 )}
               </div>
 

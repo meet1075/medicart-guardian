@@ -14,9 +14,13 @@ const STEPS = [
 export function CheckoutFrame({
   current,
   children,
+  extraFee,
+  extraFeeLabel,
 }: {
   current: "prescription" | "address" | "payment";
   children: ReactNode;
+  extraFee?: number;
+  extraFeeLabel?: string;
 }) {
   const { cart, cartHasRx } = useStore();
   const activeIdx = STEPS.findIndex((s) => s.key === current);
@@ -28,7 +32,8 @@ export function CheckoutFrame({
     .filter((x) => x.m) as { m: any; qty: number }[];
   const subtotal = items.reduce((s, i) => s + i.m.mrp * i.qty, 0);
   const delivery = subtotal >= 1000 ? 0 : items.length ? 39 : 0;
-  const total = subtotal + delivery;
+  const fee = extraFee ?? 0;
+  const total = subtotal + delivery + fee;
 
   return (
     <PublicLayout>
@@ -90,8 +95,26 @@ export function CheckoutFrame({
             <div className="mt-4 space-y-1.5 border-t border-border pt-4 text-sm">
               <SumRow label="Subtotal" value={`₹${subtotal.toFixed(2)}`} />
               <SumRow label="Delivery" value={delivery === 0 ? "FREE" : `₹${delivery}`} />
+              {extraFeeLabel && (
+                <SumRow
+                  label={extraFeeLabel}
+                  value={fee === 0 ? "FREE" : `₹${fee.toFixed(2)}`}
+                />
+              )}
               <div className="my-2 border-t border-border" />
               <SumRow label="Total" value={`₹${total.toFixed(2)}`} bold />
+            </div>
+
+            <div className="mt-5 rounded-lg border border-border bg-surface-muted/60 p-3 text-xs text-muted-foreground space-y-1.5">
+              <div className="font-semibold text-foreground flex items-center gap-1.5">
+                <span>📦 Shipping & COD Policy</span>
+              </div>
+              <p>
+                • Orders <strong>above ₹1,000</strong> get <strong className="text-success">FREE Delivery & FREE COD</strong>.
+              </p>
+              <p>
+                • Orders <strong>below ₹1,000</strong>: Delivery is ₹39. Cash on Delivery (COD) carries a <strong>₹49 handling fee</strong>.
+              </p>
             </div>
           </aside>
         </div>

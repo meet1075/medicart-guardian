@@ -1,4 +1,3 @@
-import nodemailer from "nodemailer";
 
 export interface OrderEmailItem {
   name: string;
@@ -38,7 +37,8 @@ export interface OrderEmailData {
   items?: OrderEmailItem[];
 }
 
-function getTransporter() {
+async function getTransporter() {
+  if (typeof window !== "undefined") return null;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
@@ -46,6 +46,9 @@ function getTransporter() {
     console.warn("[EmailService] SMTP credentials not configured (SMTP_USER / SMTP_PASS).");
     return null;
   }
+
+  const nodemailerModule = await import("nodemailer");
+  const nodemailer = (nodemailerModule as any).default || nodemailerModule;
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -106,14 +109,15 @@ function renderEmailWrapper(title: string, contentHtml: string): string {
  * EMAIL 1: Admin Notification when an order is placed and confirmed (Payment Received / COD)
  */
 export async function sendAdminNewOrderAlert(order: OrderEmailData): Promise<boolean> {
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return false;
 
   const orderShortId = order.id.slice(-8).toUpperCase();
   const customerName = order.address?.fullName || order.user?.name || "Customer";
   const customerPhone = order.address?.phone || "Not provided";
   const customerEmail = order.user?.email || "Not provided";
-  const paymentMode = order.paymentMethod.toUpperCase();
+  const isCod = order.paymentMethod?.toLowerCase() === "cod";
+  const paymentMode = isCod ? "Cash on Delivery (COD)" : "Paid Online (Razorpay)";
   const formattedTotal = `₹${order.total.toFixed(2)}`;
 
   const itemsHtml = (order.items && order.items.length > 0)
@@ -147,11 +151,14 @@ export async function sendAdminNewOrderAlert(order: OrderEmailData): Promise<boo
 
   const contentHtml = `
     <div style="margin-bottom: 20px;">
-      <span style="display: inline-block; padding: 4px 10px; background-color: #dcfce7; color: #15803d; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
-        New Order Confirmed
+      <span style="display: inline-block; padding: 4px 10px; background-color: ${isCod ? "#fef3c7" : "#dcfce7"}; color: ${isCod ? "#92400e" : "#15803d"}; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
+        ${isCod ? "New COD Order Placed" : "New Order Confirmed"}
       </span>
       <h2 style="margin: 10px 0 4px 0; font-size: 18px; color: #0f172a;">New Order #${orderShortId} Received</h2>
-      <p style="margin: 0; font-size: 14px; color: #64748b;">Total Amount: <strong style="color: #0f766e; font-size: 16px;">${formattedTotal}</strong> via <strong>${paymentMode}</strong></p>
+      <p style="margin: 0; font-size: 14px; color: #64748b;">
+        Total Amount: <strong style="color: #0f766e; font-size: 16px;">${formattedTotal}</strong> via <strong>${paymentMode}</strong>
+        ${isCod ? `<span style="display: block; color: #b45309; font-weight: 700; margin-top: 4px;">⚠️ Action: Collect ${formattedTotal} from customer upon delivery</span>` : ""}
+      </p>
     </div>
 
     <!-- Customer Information -->
@@ -242,13 +249,14 @@ export async function sendCustomerOrderConfirmationEmail(order: OrderEmailData):
     return false;
   }
 
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return false;
 
   const orderShortId = order.id.slice(-8).toUpperCase();
   const customerName = order.address?.fullName || order.user?.name || "Valued Customer";
   const formattedTotal = `₹${order.total.toFixed(2)}`;
-  const paymentMode = order.paymentMethod.toUpperCase();
+  const isCod = order.paymentMethod?.toLowerCase() === "cod";
+  const paymentMode = isCod ? "Cash on Delivery (COD)" : "Paid Online (Razorpay)";
 
   const itemsHtml = (order.items && order.items.length > 0)
     ? order.items
@@ -287,6 +295,16 @@ export async function sendCustomerOrderConfirmationEmail(order: OrderEmailData):
       <h2 style="margin: 10px 0 4px 0; font-size: 18px; color: #0f172a;">Thank You for Your Order, ${customerName}!</h2>
       <p style="margin: 0; font-size: 14px; color: #64748b;">Order <strong>#${orderShortId}</strong> has been received via <strong>${paymentMode}</strong>.</p>
     </div>
+
+    ${isCod ? `
+    <!-- COD Customer Instruction Box -->
+    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 14px 16px; margin: 16px 0;">
+      <strong style="color: #92400e; font-size: 13px;">💵 Cash on Delivery (COD) Instructions:</strong>
+      <p style="margin: 4px 0 0 0; font-size: 13px; color: #b45309; line-height: 19px;">
+        Please keep <strong>₹${order.total.toFixed(2)}</strong> ready in cash or UPI to pay our delivery executive upon arrival.
+      </p>
+    </div>
+    ` : ""}
 
     <!-- Pharmacist Review Notice Box -->
     <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 6px; padding: 16px; margin: 20px 0;">
@@ -361,7 +379,7 @@ export async function sendCustomerRxApprovedEmail(order: OrderEmailData): Promis
     return false;
   }
 
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return false;
 
   const orderShortId = order.id.slice(-8).toUpperCase();
@@ -424,7 +442,7 @@ export async function sendCustomerRxRejectedEmail(order: OrderEmailData, reason?
     return false;
   }
 
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return false;
 
   const orderShortId = order.id.slice(-8).toUpperCase();
@@ -490,7 +508,7 @@ export async function sendCustomerTrackingEmail(order: OrderEmailData): Promise<
     return false;
   }
 
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return false;
 
   const orderShortId = order.id.slice(-8).toUpperCase();

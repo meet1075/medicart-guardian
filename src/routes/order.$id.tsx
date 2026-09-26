@@ -119,12 +119,20 @@ function OrderPage() {
             </div>
             <div className="border-t border-border pt-4">
               <Row label="Subtotal" value={`₹${order.subtotal.toFixed(2)}`} />
-              <Row label="Delivery" value={order.delivery === 0 ? "FREE" : `₹${order.delivery}`} />
+              <Row label="Delivery" value={order.delivery === 0 ? "FREE" : `₹${order.delivery.toFixed(2)}`} />
               <div className="my-2 border-t border-border" />
               <Row label="Total" value={`₹${order.total.toFixed(2)}`} bold />
-              <div className="mt-2 text-xs uppercase text-muted-foreground">
-                Paid via {order.paymentMethod.toUpperCase()}
-              </div>
+              {order.paymentMethod === "cod" ? (
+                <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-900">
+                  <div className="font-bold">Cash on Delivery (COD)</div>
+                  <div className="mt-0.5 text-amber-800">Please pay <strong>₹{order.total.toFixed(2)}</strong> via Cash or UPI to the delivery agent.</div>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-lg border border-success/30 bg-success/10 p-2.5 text-xs text-success">
+                  <div className="font-bold">Paid Online</div>
+                  <div className="mt-0.5 text-foreground/70">Payment verified via Razorpay</div>
+                </div>
+              )}
             </div>
           </aside>
         </div>
@@ -182,7 +190,7 @@ function ConfirmationBanner({ order }: { order: FullOrder }) {
               : isRejected
               ? "Please review the note below and re-upload your prescription."
               : isRxPending
-              ? "Our licensed pharmacist is reviewing your prescription. You'll be notified once it's verified, and your order will then be processed for shipping."
+              ? "Our pharmacist is reviewing your prescription. You'll be notified once it's verified, and your order will then be processed for shipping."
               : "Your order is confirmed and being processed for shipping."}
           </p>
         </div>
