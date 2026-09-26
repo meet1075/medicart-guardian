@@ -26,11 +26,36 @@ const VALID_ORDER_STATUSES = [
 ] as const;
 type OrderStatus = (typeof VALID_ORDER_STATUSES)[number];
 
+/**
+ * Auto-expires orders that have been stuck in "payment_pending" without a payment ID
+ * for more than 30 minutes, transitioning them to "payment_cancelled".
+ */
+export async function autoExpireStalePaymentPendingOrders() {
+  try {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    await db.order.updateMany({
+      where: {
+        status: "payment_pending",
+        razorpayPaymentId: null,
+        createdAt: { lt: thirtyMinutesAgo },
+      },
+      data: {
+        status: "payment_cancelled",
+        rejectReason: "Payment session expired (abandoned checkout)",
+      },
+    });
+  } catch (err) {
+    console.error("[Orders] Failed to auto-expire stale payment_pending orders:", err);
+  }
+}
+
 export const getOrdersFn = createServerFn({ method: "GET" })
   .handler(async (): Promise<ApiResponse> => {
     try {
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in", 401);
+
+      await autoExpireStalePaymentPendingOrders();
 
       const whereClause = session.role === "ADMIN" ? {} : { userId: session.id };
 
@@ -58,6 +83,8 @@ export const getOrderByIdFn = createServerFn({ method: "GET" })
     try {
       const session = await getUserSession();
       if (!session) return errorResponse("Unauthorized", "Please log in", 401);
+
+      await autoExpireStalePaymentPendingOrders();
 
       const order = await db.order.findUnique({
         where: { id: data.id },
@@ -167,11 +194,15 @@ export const createOrderFn = createServerFn({ method: "POST" })
       }
 
       // Re-compute totals server-side
+      const isCod = data.paymentMethod === "cod";
+      const isOnline = !isCod;
       const serverSubtotal = data.items.reduce((sum, item) => {
         const dbMed = priceMap.get(item.medicineId)!;
         return sum + dbMed.mrp * item.qty;
       }, 0);
-      const serverDelivery = serverSubtotal >= 1000 ? 0 : 39;
+      const serverBaseDelivery = serverSubtotal >= 1000 ? 0 : 39;
+      const serverCodFee = isCod ? (serverSubtotal >= 1000 ? 0 : 49) : 0;
+      const serverDelivery = serverBaseDelivery + serverCodFee;
       const serverTotal = serverSubtotal + serverDelivery;
 
       // Reject if client total is more than ₹5 off from server-computed total
@@ -190,7 +221,6 @@ export const createOrderFn = createServerFn({ method: "POST" })
       }
 
       let rzpOrderId: string | undefined = undefined;
-      const isOnline = data.paymentMethod !== "cod";
       const initialStatus: OrderStatus = isOnline ? "payment_pending" : "under_review";
 
       if (isOnline) {

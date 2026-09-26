@@ -164,9 +164,17 @@ function CartPage() {
             >
               Proceed
             </button>
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Free delivery on orders over ₹999
-            </p>
+            <div className="mt-4 rounded-lg border border-border bg-surface-muted/60 p-3 text-xs text-muted-foreground space-y-1">
+              <div className="font-semibold text-foreground flex items-center gap-1.5">
+                <span>🚚 Shipping & COD Benefits</span>
+              </div>
+              <p>
+                • Orders <strong>above ₹1,000</strong> get <strong className="text-success">FREE Delivery & FREE COD</strong>.
+              </p>
+              <p>
+                • Orders <strong>below ₹1,000</strong>: ₹39 Delivery · ₹49 COD fee.
+              </p>
+            </div>
           </aside>
         </div>
       </div>

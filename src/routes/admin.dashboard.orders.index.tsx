@@ -197,9 +197,19 @@ function OrdersPage() {
                 <td className="px-4 py-3 font-semibold">₹{o.total.toFixed(2)}</td>
                 <td className="px-4 py-3 text-xs">
                   {o.status === "payment_cancelled" ? (
-                    <span className="inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
-                      Payment Cancelled
-                    </span>
+                    <div>
+                      <span className="inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                        Payment Cancelled
+                      </span>
+                      {o.rejectReason && (
+                        <div
+                          className="mt-0.5 max-w-[140px] truncate text-[10px] text-muted-foreground"
+                          title={o.rejectReason}
+                        >
+                          {o.rejectReason}
+                        </div>
+                      )}
+                    </div>
                   ) : o.status === "payment_pending" ? (
                     <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
                       Payment Pending
